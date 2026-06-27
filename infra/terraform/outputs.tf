@@ -66,6 +66,15 @@ output "reports_bucket_name" {
   value = aws_s3_bucket.reports.bucket
 }
 
+output "api_gateway_url" {
+  description = "Public HTTPS URL (API Gateway) – use this from Lovable."
+  value       = aws_apigatewayv2_stage.default.invoke_url
+}
+
+output "api_gateway_id" {
+  value = aws_apigatewayv2_api.http_api.id
+}
+
 output "database_url_secret_arn" {
   value = local.database_url_secret_arn
 }
