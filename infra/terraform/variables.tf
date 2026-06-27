@@ -88,7 +88,7 @@ variable "desired_count" {
 variable "bedrock_model_id" {
   description = "Bedrock model ID exposed to the task."
   type        = string
-  default     = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+  default     = "us.mistral.pixtral-large-2502-v1:0"
 }
 
 variable "allowed_origins" {

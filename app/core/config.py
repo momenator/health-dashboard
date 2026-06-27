@@ -6,7 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
 
     app_name: str = "AI4Good Health Chatbot Backend"
     app_env: str = "development"
@@ -22,13 +24,7 @@ class Settings(BaseSettings):
 
     # Bedrock
     enable_bedrock: bool = False
-    bedrock_model_id: str = Field(default="anthropic.claude-3-5-sonnet-20241022-v2:0")
-    bedrock_router_model_id: str | None = None
-    bedrock_query_model_id: str | None = None
-    bedrock_answer_model_id: str | None = None
-    bedrock_chart_model_id: str | None = None
-    bedrock_recommendation_model_id: str | None = None
-    bedrock_report_model_id: str | None = None
+    bedrock_model_id: str = Field(default="us.mistral.pixtral-large-2502-v1:0")
 
     # Athena
     athena_database: str = "ai4good_health"
@@ -41,7 +37,9 @@ class Settings(BaseSettings):
     data_dir: str = "data/reporting"
 
     # CORS
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://lovable.dev"
+    allowed_origins: str = (
+        "http://localhost:3000,http://localhost:5173,https://lovable.dev"
+    )
 
     # Lovable
     lovable_webhook_url: str | None = None
@@ -52,7 +50,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+        return [
+            origin.strip()
+            for origin in self.allowed_origins.split(",")
+            if origin.strip()
+        ]
 
     @property
     def allowed_tables_list(self) -> list[str]:

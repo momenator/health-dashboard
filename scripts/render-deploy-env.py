@@ -117,7 +117,7 @@ def main() -> int:
         "APP_ENV": existing.get("APP_ENV", "production"),
         "ALLOWED_ORIGINS": existing.get("ALLOWED_ORIGINS", ""),
         "ENABLE_BEDROCK": existing.get("ENABLE_BEDROCK", "true"),
-        "BEDROCK_MODEL_ID": existing.get("BEDROCK_MODEL_ID", "anthropic.claude-3-5-sonnet-20241022-v2:0"),
+        "BEDROCK_MODEL_ID": existing.get("BEDROCK_MODEL_ID", "us.mistral.pixtral-large-2502-v1:0"),
         "REPORT_STORAGE_BACKEND": existing.get("REPORT_STORAGE_BACKEND", "s3"),
         "S3_REPORTS_PREFIX": existing.get("S3_REPORTS_PREFIX", "reports"),
         "LOVABLE_WEBHOOK_URL": existing.get("LOVABLE_WEBHOOK_URL", ""),
