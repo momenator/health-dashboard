@@ -1,0 +1,30 @@
+project_name       = "health-dashboard"
+aws_region         = "eu-central-1"
+ecr_repository_name = "health-dashboard-backend"
+ecs_cluster_name    = "health-dashboard-cluster"
+ecs_service_name    = "health-dashboard-service"
+ecs_task_family     = "health-dashboard-task"
+ecs_container_name  = "health-dashboard-api"
+vpc_id             = "vpc-abc123"
+public_subnet_ids  = ["subnet-public-a", "subnet-public-b"]
+ecs_subnet_ids     = ["subnet-public-a", "subnet-public-b"]
+
+allowed_origins = [
+  "https://your-lovable-app.example",
+]
+
+allowed_ingress_cidr_blocks = [
+  "0.0.0.0/0",
+]
+
+bedrock_model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+
+# Use an existing secret ARN if you already created one.
+# db_secret_arn = "arn:aws:secretsmanager:eu-central-1:123456789012:secret:health-dashboard/database-url"
+
+# Optional if you use Lovable webhooks.
+# lovable_webhook_url = "https://your-lovable-app.example/api/report-callback"
+
+tags = {
+  Owner = "hackathon-team"
+}
