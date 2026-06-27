@@ -194,6 +194,15 @@ def execute_local_query(sql: str) -> list[dict[str, Any]]:
         group_cols = [c.strip() for c in group_match.group(1).split(",")]
         select_clause = select_match.group(1)
         rows = _apply_group_by(rows, group_cols, select_clause)
+    elif select_match:
+        select_clause = select_match.group(1).strip()
+        # Handle COUNT(*) without GROUP BY — return a single aggregate row
+        if re.search(r'\bCOUNT\s*\(\s*\*\s*\)', select_clause, re.IGNORECASE):
+            count_alias = "total"
+            alias_match = re.search(r'COUNT\s*\(\s*\*\s*\)\s+(?:AS\s+)?(\w+)', select_clause, re.IGNORECASE)
+            if alias_match:
+                count_alias = alias_match.group(1)
+            rows = [{count_alias: str(len(rows))}]
 
     # Apply ORDER BY
     order_match = re.search(r'\bORDER\s+BY\s+([\w\s,]+?)(?:\bLIMIT\b|$)', sql, re.IGNORECASE)
@@ -211,18 +220,57 @@ def execute_local_query(sql: str) -> list[dict[str, Any]]:
 
 
 def _apply_simple_where(rows: list[dict], clause: str) -> list[dict]:
-    """Apply basic WHERE filtering (supports = and LIKE)."""
+    """Apply basic WHERE filtering (supports =, !=, IS NOT NULL, IS NULL, LIKE, AND)."""
+    # Handle AND conditions
+    if " AND " in clause.upper():
+        parts = re.split(r'\s+AND\s+', clause, flags=re.IGNORECASE)
+        for part in parts:
+            rows = _apply_simple_where(rows, part.strip())
+        return rows
+
+    # Handle IS NOT NULL: column IS NOT NULL
+    is_not_null_match = re.match(r"(\w+)\s+IS\s+NOT\s+NULL", clause, re.IGNORECASE)
+    if is_not_null_match:
+        col = is_not_null_match.group(1)
+        return [r for r in rows if r.get(col, "") not in ("", None)]
+
+    # Handle IS NULL: column IS NULL
+    is_null_match = re.match(r"(\w+)\s+IS\s+NULL", clause, re.IGNORECASE)
+    if is_null_match:
+        col = is_null_match.group(1)
+        return [r for r in rows if r.get(col, "") in ("", None)]
+
     # Handle simple equality: column = 'value'
     eq_match = re.match(r"(\w+)\s*=\s*'([^']*)'", clause)
     if eq_match:
         col, val = eq_match.group(1), eq_match.group(2)
         return [r for r in rows if r.get(col, "").lower() == val.lower()]
 
+    # Handle numeric equality: column = number
+    num_eq_match = re.match(r"(\w+)\s*=\s*(\d+\.?\d*)", clause)
+    if num_eq_match:
+        col, val = num_eq_match.group(1), num_eq_match.group(2)
+        return [r for r in rows if r.get(col, "") == val]
+
+    # Handle inequality: column != 'value' or column <> 'value'
+    neq_match = re.match(r"(\w+)\s*(?:!=|<>)\s*'([^']*)'", clause)
+    if neq_match:
+        col, val = neq_match.group(1), neq_match.group(2)
+        return [r for r in rows if r.get(col, "").lower() != val.lower()]
+
     # Handle LIKE: column LIKE '%value%'
     like_match = re.match(r"(\w+)\s+LIKE\s+'%([^']*?)%'", clause, re.IGNORECASE)
     if like_match:
         col, val = like_match.group(1), like_match.group(2)
         return [r for r in rows if val.lower() in r.get(col, "").lower()]
+
+    # Handle IN: column IN ('val1', 'val2')
+    in_match = re.match(r"(\w+)\s+IN\s*\(([^)]+)\)", clause, re.IGNORECASE)
+    if in_match:
+        col = in_match.group(1)
+        values = [v.strip().strip("'\"") for v in in_match.group(2).split(",")]
+        values_lower = [v.lower() for v in values]
+        return [r for r in rows if r.get(col, "").lower() in values_lower]
 
     return rows
 
