@@ -1,0 +1,4 @@
+domain,grain,record_id,source_row_id,source_file,source_sheet,source_row_number,year,cause_category,count,district,data_confidence_score,data_confidence_marker,data_quality_issue_count,data_quality_highest_severity
+emergency,cause_aggregate,AC-0001,1,ambulance_data.xlsx,Causes,2,2024,obstetric_emergency,312,Ampanihy Ouest,0.93,high,0,none
+emergency,cause_aggregate,AC-0002,2,ambulance_data.xlsx,Causes,3,2024,trauma,198,Betioky Sud,0.89,high,1,low
+emergency,cause_aggregate,AC-0003,3,ambulance_data.xlsx,Causes,4,2024,pediatric_emergency,145,Ampanihy Ouest,0.75,medium,2,medium

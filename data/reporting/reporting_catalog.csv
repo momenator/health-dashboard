@@ -1,0 +1,7 @@
+table_name,row_count,domain,grain,description
+tb_patient_journey,4495,tuberculosis,one row per patient screening/diagnosis/treatment event,TB screening diagnosis treatment follow-up and outcome records
+mchp_patient_support,1200,maternal_child_health,one row per patient support interaction,Patient support records with vulnerability scores and treatment outcomes
+ambulance_trips,890,emergency,one row per ambulance trip,Ambulance trip records with distance response time and outcomes
+ambulance_causes,45,emergency,one row per cause category,Aggregated ambulance cause counts by category
+community_workers,120,community_health,one row per community health worker,Community health worker profiles coverage and support records
+sensitization_activities,340,awareness,one row per sensitization activity,Awareness and sensitization activity records with participants and referrals

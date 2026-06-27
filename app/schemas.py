@@ -1,56 +1,73 @@
-from datetime import datetime
+from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Any, Literal
 
-
-class HealthRecordBase(BaseModel):
-    patient_id: str = Field(..., examples=["patient-001"])
-    patient_name: str = Field(..., examples=["Jane Doe"])
-    age: int = Field(..., ge=0, le=120)
-    gender: str = Field(..., examples=["female"])
-    notes: str | None = None
-    source: str = "manual"
-    heart_rate: float | None = Field(default=None, ge=0)
-    systolic_bp: float | None = Field(default=None, ge=0)
-    diastolic_bp: float | None = Field(default=None, ge=0)
-    blood_glucose: float | None = Field(default=None, ge=0)
-    spo2: float | None = Field(default=None, ge=0, le=100)
-    weight_kg: float | None = Field(default=None, ge=0)
-    height_cm: float | None = Field(default=None, ge=0)
-    recorded_at: datetime | None = None
+from pydantic import BaseModel, Field
 
 
-class HealthRecordCreate(HealthRecordBase):
-    pass
+# ---------- Chat request / response ----------
+
+class UserContext(BaseModel):
+    """Optional user context passed with chat requests."""
+    language: str | None = None
+    role: str | None = None
 
 
-class HealthRecordRead(HealthRecordBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    created_at: datetime
-
-
-class ReportGenerateRequest(BaseModel):
-    health_record_id: int
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=4000, examples=["How many TB screenings are in the dataset?"])
+    conversation_id: str | None = None
+    user_context: UserContext | None = None
 
 
-class ReportRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    health_record_id: int
-    status: str
-    risk_level: str
-    summary: str
-    recommendations: list[str]
-    pdf_uri: str
-    model_name: str
-    created_at: datetime
+class EvidenceItem(BaseModel):
+    table: str
+    metric: str | None = None
+    value: Any | None = None
+    dimension: str | None = None
+    filters: dict[str, Any] | None = None
 
 
-class ReportNotificationPayload(BaseModel):
-    report_id: int
-    health_record_id: int
-    status: str
-    pdf_uri: str
+class ChartPayload(BaseModel):
+    type: Literal["bar", "line", "pie", "table"]
+    title: str
+    xKey: str | None = None
+    yKey: str | None = None
+    data: list[dict[str, Any]]
+
+
+ResponseType = Literal[
+    "answer",
+    "chart",
+    "recommendation",
+    "report_text",
+    "clarification",
+    "error",
+]
+
+
+class ChatResponse(BaseModel):
+    type: ResponseType
+    answer: str
+    chart: ChartPayload | None = None
+    evidence: list[EvidenceItem] | None = None
+    quality_note: str | None = None
+    suggested_followups: list[str] | None = None
+
+
+# ---------- Intent classification ----------
+
+Intent = Literal[
+    "data_lookup",
+    "chart",
+    "explanation",
+    "recommendation",
+    "report_text",
+    "prediction",
+    "clarification",
+]
+
+
+class RouterResult(BaseModel):
+    intent: Intent
+    entities: dict[str, Any] = Field(default_factory=dict)
+    confidence: float = 1.0

@@ -1,0 +1,6 @@
+domain,grain,record_id,source_row_id,source_file,source_sheet,source_row_number,year,district,site,screening_type,screening_result,diagnosis,treatment_started,treatment_regimen,follow_up_count,outcome,outcome_date,data_confidence_score,data_confidence_marker,data_quality_issue_count,data_quality_highest_severity
+tuberculosis,patient_event,TB-0001,1,tb_data.xlsx,Screenings,2,2024,Ampanihy Ouest,Site A,active,positive,confirmed,yes,standard,3,completed,2024-09-15,0.95,high,0,none
+tuberculosis,patient_event,TB-0002,2,tb_data.xlsx,Screenings,3,2024,Ampanihy Ouest,Site B,passive,negative,,no,,0,not_applicable,,0.88,high,1,low
+tuberculosis,patient_event,TB-0003,3,tb_data.xlsx,Screenings,4,2024,Betioky Sud,Site C,active,positive,confirmed,yes,standard,2,on_treatment,,0.72,medium,2,medium
+tuberculosis,patient_event,TB-0004,4,tb_data.xlsx,Screenings,5,2024,Betioky Sud,Site C,active,positive,probable,yes,short,1,lost_to_followup,,0.55,low,3,high
+tuberculosis,patient_event,TB-0005,5,tb_data.xlsx,Screenings,6,2024,Ampanihy Ouest,Site A,contact,negative,,no,,0,not_applicable,,0.91,high,0,none

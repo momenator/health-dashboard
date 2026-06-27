@@ -6,7 +6,8 @@ __pycache__/
 .coverage
 *.egg-info/
 health_dashboard.db
-data/
+data/*
+!data/reporting/
 .env.deploy
 aws-session.sh
 infra/terraform/.terraform/

@@ -1,1 +1,1 @@
-"""Health dashboard backend package."""
+"""AI4Good Health Chatbot Backend."""

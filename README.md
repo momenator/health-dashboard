@@ -1,126 +1,204 @@
-# Health Dashboard Backend
+# AI4Good Health Chatbot Backend
 
-Python backend for a hackathon health dashboard. It exposes APIs for:
+AI-powered chatbot backend for the AI4Good health program. Uses Amazon Bedrock for natural language understanding and Athena (or local CSV fallback) for data queries over anonymized reporting datasets.
 
-- storing health records
-- generating AI-assisted reports
-- serving report PDFs
-- notifying a Lovable frontend instance when reports are ready
+## Architecture
 
-## Stack
+```
+Lovable Frontend → API Gateway → FastAPI on ECS → Router → Tool Handlers
+                                                         → Amazon Bedrock
+                                                         → Athena / Local CSV
+```
 
-- FastAPI
-- SQLAlchemy
-- SQLite for local development
-- AWS Bedrock for report generation
-- Local file storage or S3 for generated reports
+## Features
 
-## Quick start
+- **Intent Router**: Classifies questions into data_lookup, chart, explanation, recommendation, report_text, prediction, or clarification
+- **SQL Safety**: Validates all queries - blocks INSERT/UPDATE/DELETE/DROP and restricts to reporting tables only
+- **Confidence-Aware**: Uses data quality/confidence columns to add caveats to answers
+- **Chart Generation**: Returns frontend-friendly chart JSON (bar, line, pie, table)
+- **Report Writing**: Generates polished annual-report paragraphs
+- **Privacy Protection**: Refuses requests for names, phone numbers, CIN, photos, or private identifiers
+- **Prediction Stub**: Graceful handling of future risk-scoring features
 
-1. Create the environment and install dependencies with `uv`:
+## Dataset
 
-   ```bash
-   uv sync --extra dev
-   ```
+All data lives in `data/reporting/`:
 
-2. Copy the environment file:
+| Table | Domain | Description |
+|-------|--------|-------------|
+| tb_patient_journey | Tuberculosis | TB screening, diagnosis, treatment, outcomes |
+| mchp_patient_support | Maternal/Child Health | Patient support, vulnerability, treatment |
+| ambulance_trips | Emergency | Ambulance trips, distance, response time |
+| ambulance_causes | Emergency | Aggregated cause counts |
+| community_workers | Community Health | CHW profiles, coverage, training |
+| sensitization_activities | Awareness | Activity records, participants, referrals |
+| reporting_catalog | Metadata | Table descriptions, row counts, domains |
 
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Start the API:
-
-   ```bash
-   uv run uvicorn app.main:app --reload
-   ```
-
-4. Open `http://127.0.0.1:8000/docs`.
-
-## Deploy to AWS
-
-This repo now includes a single production deploy script for ECS on Fargate:
+## Quick Start (Local Development)
 
 ```bash
+# 1. Install dependencies
+uv sync
+
+# 2. Copy environment config
+cp .env.example .env
+
+# 3. Run the server (Bedrock disabled, uses local CSV)
+uv run uvicorn app.main:app --reload --port 8000
+
+# 4. Test it
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "How many TB screenings are in the dataset?"}'
+```
+
+## API Endpoints
+
+### POST /chat
+
+Main chat endpoint.
+
+**Request:**
+```json
+{
+  "message": "Show TB screenings by district",
+  "conversation_id": "optional-id",
+  "user_context": {}
+}
+```
+
+**Response:**
+```json
+{
+  "type": "answer",
+  "answer": "There are 4495 TB screenings across 2 districts...",
+  "chart": null,
+  "evidence": [{"table": "tb_patient_journey", "metric": "query_results", "value": 5}],
+  "quality_note": "This answer uses tb_patient_journey. The result includes high, medium, and low confidence rows.",
+  "suggested_followups": ["Show this as a chart.", "Give me recommendations based on this data."]
+}
+```
+
+### GET /health
+
+Health check.
+
+### GET /schema
+
+Returns table schemas and catalog info.
+
+### GET /tables
+
+Lists available reporting tables.
+
+## AWS Deployment
+
+### Prerequisites
+
+- AWS account with Bedrock access enabled
+- Terraform installed
+- Docker (or compatible container runtime)
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| AWS_REGION | AWS region | Yes |
+| ENABLE_BEDROCK | Enable Bedrock models | Yes (production) |
+| BEDROCK_MODEL_ID | Default Bedrock model | Yes (production) |
+| ATHENA_DATABASE | Glue/Athena database name | Yes (production) |
+| ATHENA_OUTPUT_S3 | S3 path for Athena results | Yes (production) |
+| ALLOWED_TABLES | Comma-separated allowed table names | Yes |
+| MAX_QUERY_ROWS | Default LIMIT for queries | No (default: 1000) |
+| ALLOWED_ORIGINS | CORS origins | Yes |
+| DATA_DIR | Local CSV directory | No (default: data/reporting) |
+
+### Data Deployment to S3
+
+Upload the reporting CSVs:
+
+```bash
+aws s3 sync data/reporting/ s3://<your-bucket>/ai4good-health/reporting/2026/
+```
+
+### Glue/Athena Setup
+
+Create a Glue database and crawler, or manually create tables:
+
+```sql
+CREATE EXTERNAL TABLE ai4good_health.tb_patient_journey (
+  domain STRING, grain STRING, record_id STRING, ...
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION 's3://<bucket>/ai4good-health/reporting/2026/tb_patient_journey/';
+```
+
+Repeat for each table.
+
+### IAM Permissions
+
+The backend role needs:
+- `bedrock:InvokeModel` for selected model
+- `athena:StartQueryExecution`, `athena:GetQueryExecution`, `athena:GetQueryResults`
+- `glue:GetDatabase`, `glue:GetTable`, `glue:GetTables`
+- `s3:GetObject` for reporting/ prefix only
+- `s3:PutObject` for Athena output location
+- CloudWatch Logs permissions
+
+The backend role should NOT have access to private/, raw/, cleaned/, or quality/ prefixes.
+
+### Deploy to ECS
+
+```bash
+# Fill in deployment config
 cp .env.deploy.example .env.deploy
-# fill in the AWS values
+# Edit .env.deploy with your AWS values
+
+# Run the deploy script
 ./scripts/deploy.sh
 ```
 
-The script:
-
-- runs tests with `uv`
-- builds the Docker image locally
-- pushes it to ECR
-- registers a new ECS task definition
-- creates or updates one ECS Fargate service
-
-See `docs/aws-setup.md` for the AWS resources you need first.
-
-## Terraform
-
-A minimal hackathon Terraform stack is included in `infra/terraform/`.
-
-It provisions:
-
-- ECR
-- ECS cluster support resources
-- ALB and target group
-- security groups
-- ECS IAM roles
-- S3 bucket for reports
-- optional Secrets Manager placeholders
-
-Typical flow:
+## Running Tests
 
 ```bash
-cd infra/terraform
-cp terraform.tfvars.example terraform.tfvars
-terraform init
-terraform apply
+uv run pytest -v
 ```
 
-Then copy the Terraform outputs into `.env.deploy` and run:
+## Project Structure
 
-```bash
-./scripts/render-deploy-env.sh
-# fill in any remaining values like ALLOWED_ORIGINS
-./scripts/deploy.sh
+```
+app/
+├── main.py              # FastAPI app entry point
+├── router.py            # Intent classification & dispatch
+├── schemas.py           # Pydantic request/response models
+├── api/
+│   └── routes.py        # HTTP endpoints
+├── core/
+│   └── config.py        # Settings & environment variables
+├── models/
+│   ├── bedrock_client.py # Amazon Bedrock wrapper
+│   └── prompts.py       # Prompt templates per role
+└── tools/
+    ├── athena.py        # SQL validation & query execution
+    ├── schema.py        # Table schema lookups
+    ├── confidence.py    # Quality/confidence caveats
+    ├── charts.py        # Chart JSON generation
+    ├── recommendations.py # Evidence-based recommendations
+    ├── reports.py       # Annual report text generation
+    └── predictions.py   # Prediction stub
+
+data/reporting/          # Anonymized CSV datasets
+tests/                   # Test suite
+infra/terraform/         # Infrastructure as code
 ```
 
-`deploy.sh` can also read Terraform-managed values directly from `infra/terraform` when `.env.deploy` is missing or incomplete. The remaining explicit values are the environment-specific ones Terraform does not infer for you, primarily `ALLOWED_ORIGINS`.
+## Example Questions
 
-For a quick demo, you can leave both `DATABASE_URL` and `DATABASE_URL_SECRET_ARN` empty. The deployed app will fall back to SQLite inside the ECS task.
-
-## API overview
-
-- `GET /health`
-- `POST /api/v1/health-records`
-- `GET /api/v1/health-records`
-- `GET /api/v1/health-records/{record_id}`
-- `POST /api/v1/reports/generate`
-- `GET /api/v1/reports`
-- `GET /api/v1/reports/{report_id}`
-- `GET /api/v1/reports/{report_id}/download`
-
-## Local development notes
-
-- With `ENABLE_BEDROCK=false`, the app generates a deterministic local summary so you can develop without AWS credentials.
-- Set `ALLOWED_ORIGINS` to the Lovable preview URL once you have it.
-- Generated PDFs are written to `data/reports/` by default.
-- `uv sync` creates and manages `.venv` automatically.
-
-## AWS deployment notes
-
-You need these AWS pieces:
-
-1. An IAM role or user with:
-   - `bedrock:InvokeModel`
-   - `bedrock:InvokeModelWithResponseStream` if you later stream responses
-   - `s3:PutObject`, `s3:GetObject` if storing reports in S3
-2. Bedrock model access enabled in the target region.
-3. A deployment target such as ECS Fargate, Lambda, or EC2.
-4. Optionally RDS Postgres instead of SQLite for production.
-5. Optionally Secrets Manager or SSM Parameter Store for app secrets.
-
-More detail is in `docs/aws-setup.md`.
+1. "How many TB screenings are in the dataset?"
+2. "Show TB screenings by district as a bar chart."
+3. "Explain what data confidence means."
+4. "Which ambulance site has the longest average response time?"
+5. "Give recommendations for improving follow-up."
+6. "Write an annual report paragraph about TB screening activity."
+7. "What are the phone numbers of patients?" → Refused with explanation.

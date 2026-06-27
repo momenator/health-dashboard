@@ -1,0 +1,4 @@
+domain,grain,record_id,source_row_id,source_file,source_sheet,source_row_number,year,district,site,vulnerability_score,support_type,treatment_type,payment_status,outcome,data_confidence_score,data_confidence_marker,data_quality_issue_count,data_quality_highest_severity
+maternal_child_health,patient_interaction,MCHP-0001,1,mchp_data.xlsx,Support,2,2024,Ampanihy Ouest,MCHP A,high,nutritional,supplementation,covered,improved,0.92,high,0,none
+maternal_child_health,patient_interaction,MCHP-0002,2,mchp_data.xlsx,Support,3,2024,Betioky Sud,MCHP B,medium,psychosocial,counseling,partial,stable,0.85,high,1,low
+maternal_child_health,patient_interaction,MCHP-0003,3,mchp_data.xlsx,Support,4,2024,Ampanihy Ouest,MCHP A,low,medical,referral,not_covered,referred,0.68,medium,2,medium

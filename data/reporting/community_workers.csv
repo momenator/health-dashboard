@@ -1,0 +1,4 @@
+domain,grain,record_id,source_row_id,source_file,source_sheet,source_row_number,year,district,site,worker_type,coverage_area,households_covered,active_cases,training_completed,last_supervision_date,data_confidence_score,data_confidence_marker,data_quality_issue_count,data_quality_highest_severity
+community_health,worker_profile,CW-0001,1,chw_data.xlsx,Workers,2,2024,Ampanihy Ouest,Site A,chw,Zone 1,150,12,yes,2024-06-01,0.96,high,0,none
+community_health,worker_profile,CW-0002,2,chw_data.xlsx,Workers,3,2024,Betioky Sud,Site C,chw,Zone 2,200,8,yes,2024-05-15,0.82,high,1,low
+community_health,worker_profile,CW-0003,3,chw_data.xlsx,Workers,4,2024,Ampanihy Ouest,Site B,matron,Zone 3,180,15,no,,0.58,low,3,high

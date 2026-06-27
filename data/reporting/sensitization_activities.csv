@@ -1,0 +1,4 @@
+domain,grain,record_id,source_row_id,source_file,source_sheet,source_row_number,year,district,site,activity_date,theme,participants_count,female_participants,male_participants,referrals_made,data_confidence_score,data_confidence_marker,data_quality_issue_count,data_quality_highest_severity
+awareness,activity_record,SA-0001,1,sensitization_data.xlsx,Activities,2,2024,Ampanihy Ouest,Site A,2024-02-10,tb_awareness,45,28,17,3,0.94,high,0,none
+awareness,activity_record,SA-0002,2,sensitization_data.xlsx,Activities,3,2024,Betioky Sud,Site C,2024-03-22,maternal_health,62,52,10,7,0.88,high,1,low
+awareness,activity_record,SA-0003,3,sensitization_data.xlsx,Activities,4,2024,Ampanihy Ouest,Site B,2024-04-15,nutrition,38,30,8,2,0.71,medium,2,medium

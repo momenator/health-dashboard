@@ -1,0 +1,4 @@
+domain,grain,record_id,source_row_id,source_file,source_sheet,source_row_number,year,district,site,trip_date,distance_km,response_time_minutes,cause,patient_type,outcome,data_confidence_score,data_confidence_marker,data_quality_issue_count,data_quality_highest_severity
+emergency,ambulance_trip,AMB-0001,1,ambulance_data.xlsx,Trips,2,2024,Ampanihy Ouest,Base A,2024-03-12,45.2,28,obstetric_emergency,adult_female,transferred,0.94,high,0,none
+emergency,ambulance_trip,AMB-0002,2,ambulance_data.xlsx,Trips,3,2024,Betioky Sud,Base B,2024-04-05,32.1,42,trauma,adult_male,transferred,0.87,high,1,low
+emergency,ambulance_trip,AMB-0003,3,ambulance_data.xlsx,Trips,4,2024,Ampanihy Ouest,Base A,2024-05-20,67.8,55,pediatric_emergency,child,deceased,0.61,medium,2,high
