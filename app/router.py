@@ -51,6 +51,12 @@ def classify_intent(message: str) -> RouterResult:
     if _is_private_data_request(message):
         return RouterResult(intent="clarification", entities={"private_data_request": True})
 
+    # Check prediction intent early (always returns stub, no need for Bedrock)
+    msg_lower = message.lower()
+    pred_words = ["predict", "forecast", "risk score", "likelihood", "will happen"]
+    if any(w in msg_lower for w in pred_words):
+        return RouterResult(intent="prediction", entities=_extract_entities_rules(msg_lower))
+
     if settings.enable_bedrock:
         try:
             return _classify_with_bedrock(message)

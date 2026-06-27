@@ -66,12 +66,14 @@ def validate_sql(sql: str, allowed_tables: list[str]) -> str:
 
     # Verify only allowed tables are referenced
     # Extract table names from FROM and JOIN clauses
-    table_refs = re.findall(r'\bFROM\s+(\w+)|\bJOIN\s+(\w+)', sql_upper)
+    table_refs = re.findall(r'\bFROM\s+(\w+(?:\.\w+)?)|\bJOIN\s+(\w+(?:\.\w+)?)', sql_upper)
     referenced_tables = set()
     for match in table_refs:
         for name in match:
             if name:
-                referenced_tables.add(name.lower())
+                # Strip database/schema prefix if present (e.g., "database.table" -> "table")
+                parts = name.lower().split(".")
+                referenced_tables.add(parts[-1])
 
     # Extract CTE aliases defined in WITH clauses (they are not real tables)
     cte_aliases = set()
@@ -161,11 +163,13 @@ def execute_local_query(sql: str) -> list[dict[str, Any]]:
     data_dir = Path(settings.data_dir)
 
     # Extract table name from FROM clause
-    match = re.search(r'\bFROM\s+(\w+)', sql, re.IGNORECASE)
+    match = re.search(r'\bFROM\s+([\w.]+)', sql, re.IGNORECASE)
     if not match:
         raise SQLValidationError("Could not determine table name from query.")
 
-    table_name = match.group(1).lower()
+    table_ref = match.group(1).lower()
+    # Strip database/schema prefix
+    table_name = table_ref.split(".")[-1]
     csv_path = data_dir / f"{table_name}.csv"
 
     if not csv_path.exists():

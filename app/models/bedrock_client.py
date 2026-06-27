@@ -1,8 +1,7 @@
-"""Amazon Bedrock client wrapper for multi-role model invocation."""
+"""Amazon Bedrock client wrapper using the Converse API for multi-role model invocation."""
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
@@ -43,7 +42,10 @@ def invoke_model(
     max_tokens: int = 2048,
     temperature: float = 0.3,
 ) -> str:
-    """Invoke a Bedrock model with the given prompt and role.
+    """Invoke a Bedrock model using the Converse API.
+
+    The Converse API works across all model providers (Anthropic, Meta, Mistral,
+    Amazon Nova, etc.) with a unified interface.
 
     Args:
         prompt: The user message / prompt content.
@@ -64,27 +66,23 @@ def invoke_model(
     model_id = settings.get_model_id(role)
     client = _get_client()
 
-    messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+    messages = [{"role": "user", "content": [{"text": prompt}]}]
 
-    body: dict[str, Any] = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": max_tokens,
-        "temperature": temperature,
+    kwargs: dict[str, Any] = {
+        "modelId": model_id,
         "messages": messages,
+        "inferenceConfig": {
+            "maxTokens": max_tokens,
+            "temperature": temperature,
+        },
     }
 
     if system_prompt:
-        body["system"] = [{"type": "text", "text": system_prompt}]
+        kwargs["system"] = [{"text": system_prompt}]
 
     try:
-        response = client.invoke_model(
-            modelId=model_id,
-            contentType="application/json",
-            accept="application/json",
-            body=json.dumps(body),
-        )
-        response_body = json.loads(response["body"].read())
-        return response_body["content"][0]["text"]
+        response = client.converse(**kwargs)
+        return response["output"]["message"]["content"][0]["text"]
     except Exception as e:
-        logger.error(f"Bedrock invocation failed for role={role}: {e}")
+        logger.error(f"Bedrock invocation failed for role={role}, model={model_id}: {e}")
         raise
