@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     lovable_webhook_url: str | None = None
     lovable_api_key: str | None = None
 
+    # API Key for incoming requests
+    api_key: str | None = None
+
     # Legacy DB (kept for backward compat)
     database_url: str = "sqlite:///./health_dashboard.db"
 
