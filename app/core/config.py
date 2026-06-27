@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_session_token: str | None = None
 
+    # OpenAI
+    openai_api_key: str | None = None
+    openai_model_id: str = "gpt-4o-mini"
+
     # Bedrock
     enable_bedrock: bool = False
     bedrock_model_id: str = Field(default="anthropic.claude-3-5-sonnet-20241022-v2:0")

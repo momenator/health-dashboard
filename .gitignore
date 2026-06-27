@@ -9,6 +9,7 @@ health_dashboard.db
 data/*
 !data/reporting/
 .env.deploy
+.env
 aws-session.sh
 infra/terraform/.terraform/
 infra/terraform/terraform.tfstate

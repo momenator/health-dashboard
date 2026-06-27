@@ -57,7 +57,7 @@ def classify_intent(message: str) -> RouterResult:
     if any(w in msg_lower for w in pred_words):
         return RouterResult(intent="prediction", entities=_extract_entities_rules(msg_lower))
 
-    if settings.enable_bedrock:
+    if settings.enable_bedrock or settings.openai_api_key:
         try:
             return _classify_with_bedrock(message)
         except Exception as e:
@@ -186,7 +186,7 @@ def _extract_entities_rules(msg_lower: str) -> dict[str, Any]:
 def handle_chat(message: str, conversation_id: str | None = None) -> ChatResponse:
     """Main chat handler - routes intent and produces response."""
     settings = get_settings()
-    use_bedrock = settings.enable_bedrock
+    use_bedrock = settings.enable_bedrock or bool(settings.openai_api_key)
 
     # Classify intent
     router_result = classify_intent(message)
@@ -219,10 +219,12 @@ def handle_chat(message: str, conversation_id: str | None = None) -> ChatRespons
             return _handle_report(message, entities, use_bedrock)
         elif intent == "prediction":
             return _handle_prediction(message)
+        elif intent == "general":
+            return _handle_general(message)
         elif intent == "clarification":
             return _handle_clarification(message)
         else:
-            return _handle_data_lookup(message, entities, use_bedrock)
+            return _handle_general(message)
     except SQLValidationError as e:
         return ChatResponse(type="error", answer=f"Query validation error: {str(e)}")
     except Exception as e:
@@ -525,7 +527,13 @@ def _handle_prediction(message: str) -> ChatResponse:
 
 
 def _handle_clarification(message: str) -> ChatResponse:
-    """Handle clarification intent."""
+    """Handle clarification intent - try general knowledge answer first."""
+    settings = get_settings()
+
+    # If we have an LLM available, answer the question generally
+    if settings.openai_api_key or settings.enable_bedrock:
+        return _handle_general(message)
+
     return ChatResponse(
         type="clarification",
         answer="I'm not sure what you're asking. Could you be more specific? Here are some things I can help with:",
@@ -537,6 +545,45 @@ def _handle_clarification(message: str) -> ChatResponse:
             "Write an annual report paragraph about TB screening.",
         ],
     )
+
+
+def _handle_general(message: str) -> ChatResponse:
+    """Handle general questions using the LLM with health data context."""
+    catalog = get_catalog_info()
+    schema_desc = get_schema_description()
+
+    system_prompt = (
+        "You are a helpful health data assistant for the AI4Good Health program in Sierra Leone. "
+        "You have access to the following health reporting datasets:\n\n"
+        f"{schema_desc}\n\n"
+        "Answer the user's question helpfully. If the question relates to the available data, "
+        "explain what you know and suggest specific queries they could ask. "
+        "If it's a general health or data question, answer it directly. "
+        "Be concise but informative. Respond in the same language the user uses."
+    )
+
+    try:
+        answer = invoke_model(message, role="answer", system_prompt=system_prompt, temperature=0.4)
+        return ChatResponse(
+            type="answer",
+            answer=answer,
+            suggested_followups=[
+                "How many TB screenings are in the dataset?",
+                "Show ambulance trips by district as a bar chart.",
+                "What tables are available?",
+            ],
+        )
+    except Exception as e:
+        logger.error(f"General handler failed: {e}")
+        return ChatResponse(
+            type="clarification",
+            answer="I'm not sure what you're asking. Could you be more specific?",
+            suggested_followups=[
+                "How many TB screenings are in the dataset?",
+                "Show ambulance trips by district as a bar chart.",
+                "Explain what data confidence means.",
+            ],
+        )
 
 
 def _format_results_simple(results: list[dict], message: str) -> str:
