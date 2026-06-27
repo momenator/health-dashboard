@@ -290,6 +290,25 @@ def _handle_data_lookup(message: str, entities: dict, use_bedrock: bool) -> Chat
 
     table_name = entities.get("tables", ["reporting data"])[0] if entities.get("tables") else "reporting data"
 
+    # Handle empty results
+    if not results:
+        catalog = get_catalog_info()
+        available = ", ".join(entry.get("table_name", "") for entry in catalog if entry.get("table_name"))
+        answer = (
+            f"I couldn't find data matching your question. "
+            f"The available reporting tables are: {available}. "
+            f"Try rephrasing your question or ask about one of these datasets."
+        )
+        return ChatResponse(
+            type="answer",
+            answer=answer,
+            suggested_followups=[
+                "What tables are available?",
+                "How many TB screenings are in the dataset?",
+                "Show ambulance trips by site.",
+            ],
+        )
+
     # Generate answer
     if use_bedrock:
         confidence_summary = compute_confidence_summary(results, table_name)
@@ -329,6 +348,24 @@ def _handle_chart(message: str, entities: dict, use_bedrock: bool) -> ChatRespon
     results = run_query(validated_sql)
 
     table_name = entities.get("tables", ["reporting data"])[0] if entities.get("tables") else "reporting data"
+
+    # Handle empty results
+    if not results:
+        catalog = get_catalog_info()
+        available = ", ".join(entry.get("table_name", "") for entry in catalog if entry.get("table_name"))
+        return ChatResponse(
+            type="answer",
+            answer=(
+                f"I couldn't find data to chart for your question. "
+                f"The available datasets are: {available}. "
+                f"Try asking about TB screenings, ambulance trips, community workers, or sensitization activities."
+            ),
+            suggested_followups=[
+                "Show TB screenings by district as a bar chart.",
+                "Show ambulance causes as a pie chart.",
+                "Show community workers by district.",
+            ],
+        )
 
     chart = generate_chart(message, results, use_bedrock)
 
