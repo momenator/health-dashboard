@@ -8,10 +8,12 @@ import re
 from typing import Any
 
 from app.core.config import get_settings
-from app.models.bedrock_client import invoke_model
+from app.models.model_client import invoke_model
 from app.models.prompts import (
     ANSWER_PROMPT,
     ANSWER_SYSTEM,
+    EXPLANATION_PROMPT,
+    EXPLANATION_SYSTEM,
     PRIVATE_DATA_REFUSAL,
     QUERY_PROMPT,
     QUERY_SYSTEM,
@@ -31,7 +33,12 @@ from app.tools.confidence import compute_confidence_summary, should_add_caveat
 from app.tools.predictions import predict
 from app.tools.recommendations import generate_recommendations
 from app.tools.reports import generate_report_text
-from app.tools.schema import explain_column, explain_table, get_catalog_info, get_schema_description
+from app.tools.schema import (
+    explain_column,
+    explain_table,
+    get_dataset_catalog_context,
+    get_schema_description,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,24 +51,24 @@ PRIVATE_DATA_KEYWORDS = [
 
 
 def classify_intent(message: str) -> RouterResult:
-    """Classify user intent using Bedrock or rule-based fallback."""
+    """Classify user intent using OpenAI or rule-based fallback."""
     settings = get_settings()
 
     # First check for private data requests
     if _is_private_data_request(message):
         return RouterResult(intent="clarification", entities={"private_data_request": True})
 
-    # Check prediction intent early (always returns stub, no need for Bedrock)
+    # Check prediction intent early (always returns stub, no need for model call)
     msg_lower = message.lower()
     pred_words = ["predict", "forecast", "risk score", "likelihood", "will happen"]
     if any(w in msg_lower for w in pred_words):
         return RouterResult(intent="prediction", entities=_extract_entities_rules(msg_lower))
 
-    if settings.enable_bedrock:
+    if settings.llm_enabled:
         try:
-            return _classify_with_bedrock(message)
+            return _classify_with_model(message)
         except Exception as e:
-            logger.warning(f"Bedrock routing failed, using rules: {e}")
+            logger.warning(f"Model routing failed, using rules: {e}")
 
     return _classify_with_rules(message)
 
@@ -84,10 +91,11 @@ def _is_private_data_request(message: str) -> bool:
     return has_request and has_private
 
 
-def _classify_with_bedrock(message: str) -> RouterResult:
-    """Use Bedrock to classify intent."""
+def _classify_with_model(message: str) -> RouterResult:
+    """Use the configured model provider to classify intent."""
     prompt = ROUTER_PROMPT.format(message=message)
-    response = invoke_model(prompt, role="router", system_prompt=ROUTER_SYSTEM, temperature=0.1)
+    system_prompt = ROUTER_SYSTEM.format(dataset_catalog=get_dataset_catalog_context())
+    response = invoke_model(prompt, role="router", system_prompt=system_prompt, temperature=0.1)
 
     # Parse JSON response
     try:
@@ -98,9 +106,16 @@ def _classify_with_bedrock(message: str) -> RouterResult:
             if clean.startswith("json"):
                 clean = clean[4:]
         result = json.loads(clean)
+        entities = result.get("entities", {}) or {}
+        if not entities.get("tables"):
+            rule_entities = _extract_entities_rules(message.lower())
+            entities["tables"] = rule_entities.get("tables", [])
+        if not entities.get("dimensions"):
+            rule_entities = _extract_entities_rules(message.lower())
+            entities["dimensions"] = rule_entities.get("dimensions", [])
         return RouterResult(
             intent=result.get("intent", "data_lookup"),
-            entities=result.get("entities", {}),
+            entities=entities,
             confidence=result.get("confidence", 0.8),
         )
     except (json.JSONDecodeError, KeyError) as e:
@@ -174,6 +189,19 @@ def _extract_entities_rules(msg_lower: str) -> dict[str, Any]:
         if keyword in msg_lower and table not in entities["tables"]:
             entities["tables"].append(table)
 
+    settings = get_settings()
+    uploaded_tables = [t for t in settings.allowed_tables_list if t.startswith("uploaded_")]
+    for table in settings.allowed_tables_list:
+        table_terms = {table, table.replace("_", " "), table.removeprefix("uploaded_").replace("_", " ")}
+        if any(term and term in msg_lower for term in table_terms) and table not in entities["tables"]:
+            entities["tables"].append(table)
+    if (
+        uploaded_tables
+        and not entities["tables"]
+        and any(term in msg_lower for term in ["uploaded", "upload", "my file", "this file", "my data"])
+    ):
+        entities["tables"].append(uploaded_tables[-1])
+
     # Dimension detection
     dimension_keywords = ["district", "site", "year", "outcome", "cause", "type"]
     for dim in dimension_keywords:
@@ -186,7 +214,7 @@ def _extract_entities_rules(msg_lower: str) -> dict[str, Any]:
 def handle_chat(message: str, conversation_id: str | None = None) -> ChatResponse:
     """Main chat handler - routes intent and produces response."""
     settings = get_settings()
-    use_bedrock = settings.enable_bedrock
+    use_model = settings.llm_enabled
 
     # Classify intent
     router_result = classify_intent(message)
@@ -208,21 +236,21 @@ def handle_chat(message: str, conversation_id: str | None = None) -> ChatRespons
     # Route to appropriate handler
     try:
         if intent == "data_lookup":
-            return _handle_data_lookup(message, entities, use_bedrock)
+            return _handle_data_lookup(message, entities, use_model)
         elif intent == "chart":
-            return _handle_chart(message, entities, use_bedrock)
+            return _handle_chart(message, entities, use_model)
         elif intent == "explanation":
-            return _handle_explanation(message, entities)
+            return _handle_explanation(message, entities, use_model)
         elif intent == "recommendation":
-            return _handle_recommendation(message, entities, use_bedrock)
+            return _handle_recommendation(message, entities, use_model)
         elif intent == "report_text":
-            return _handle_report(message, entities, use_bedrock)
+            return _handle_report(message, entities, use_model)
         elif intent == "prediction":
             return _handle_prediction(message)
         elif intent == "clarification":
             return _handle_clarification(message)
         else:
-            return _handle_data_lookup(message, entities, use_bedrock)
+            return _handle_data_lookup(message, entities, use_model)
     except SQLValidationError as e:
         return ChatResponse(type="error", answer=f"Query validation error: {str(e)}")
     except Exception as e:
@@ -237,33 +265,39 @@ def handle_chat(message: str, conversation_id: str | None = None) -> ChatRespons
         )
 
 
-def _generate_sql(message: str, entities: dict, use_bedrock: bool) -> str:
-    """Generate SQL using Bedrock or fallback heuristics."""
+def _generate_sql(message: str, entities: dict, use_model: bool) -> str:
+    """Generate SQL using the configured model provider or fallback heuristics."""
     settings = get_settings()
 
-    if use_bedrock:
-        schema_desc = get_schema_description()
-        prompt = QUERY_PROMPT.format(message=message, entities=json.dumps(entities))
-        system = QUERY_SYSTEM.format(
-            database=settings.athena_database,
-            table_schemas=schema_desc,
-            max_rows=settings.max_query_rows,
-        )
-        sql = invoke_model(prompt, role="query", system_prompt=system, temperature=0.1)
-        # Clean potential markdown code blocks
-        sql = sql.strip()
-        if sql.startswith("```"):
-            sql = sql.split("```")[1]
-            if sql.startswith("sql"):
-                sql = sql[3:]
-        return sql.strip()
+    if use_model:
+        try:
+            schema_desc = get_schema_description()
+            prompt = QUERY_PROMPT.format(message=message, entities=json.dumps(entities))
+            system = QUERY_SYSTEM.format(
+                database=settings.athena_database,
+                table_schemas=schema_desc,
+                max_rows=settings.max_query_rows,
+            )
+            sql = invoke_model(prompt, role="query", system_prompt=system, temperature=0.1)
+            # Clean potential markdown code blocks
+            sql = sql.strip()
+            if sql.startswith("```"):
+                sql = sql.split("```")[1]
+                if sql.startswith("sql"):
+                    sql = sql[3:]
+            if not re.search(r"\bFROM\s+\w+", sql, re.IGNORECASE):
+                logger.warning("Model SQL generation did not reference a table, using rules.")
+                return _generate_sql_fallback(message, entities)
+            return sql.strip()
+        except Exception as e:
+            logger.warning(f"Model SQL generation failed, using rules: {e}")
 
     # Rule-based fallback
     return _generate_sql_fallback(message, entities)
 
 
 def _generate_sql_fallback(message: str, entities: dict) -> str:
-    """Generate simple SQL from entities when Bedrock is unavailable."""
+    """Generate simple SQL from entities when model calling is unavailable."""
     tables = entities.get("tables", [])
     dimensions = entities.get("dimensions", [])
 
@@ -273,6 +307,12 @@ def _generate_sql_fallback(message: str, entities: dict) -> str:
 
     table = tables[0]
 
+    if any(
+        term in message.lower()
+        for term in ["summarise", "summarize", "summary", "report", "story", "check next", "review"]
+    ):
+        return f"SELECT * FROM {table} LIMIT 50"
+
     if dimensions:
         dim = dimensions[0]
         return f"SELECT {dim}, COUNT(*) AS count FROM {table} GROUP BY {dim} ORDER BY count DESC LIMIT 20"
@@ -281,24 +321,41 @@ def _generate_sql_fallback(message: str, entities: dict) -> str:
     return f"SELECT COUNT(*) AS total_count FROM {table}"
 
 
-def _handle_data_lookup(message: str, entities: dict, use_bedrock: bool) -> ChatResponse:
-    """Handle data_lookup intent."""
-    sql = _generate_sql(message, entities, use_bedrock)
+def _run_query_with_fallback(sql: str, message: str, entities: dict) -> tuple[str, list[dict[str, Any]]]:
+    """Run model SQL, retrying with a deterministic CSV query if validation fails."""
     settings = get_settings()
-    validated_sql = validate_sql(sql, settings.allowed_tables_list)
-    results = run_query(validated_sql)
+    try:
+        validated_sql = validate_sql(sql, settings.allowed_tables_list)
+        return validated_sql, run_query(validated_sql)
+    except SQLValidationError as e:
+        logger.warning(f"Model SQL rejected, using safe CSV fallback query: {e}")
+        fallback_sql = _generate_sql_fallback(message, entities)
+        validated_sql = validate_sql(fallback_sql, settings.allowed_tables_list)
+        return validated_sql, run_query(validated_sql)
+
+
+def _handle_data_lookup(message: str, entities: dict, use_model: bool) -> ChatResponse:
+    """Handle data_lookup intent."""
+    sql = _generate_sql(message, entities, use_model)
+    validated_sql, results = _run_query_with_fallback(sql, message, entities)
 
     table_name = entities.get("tables", ["reporting data"])[0] if entities.get("tables") else "reporting data"
 
     # Generate answer
-    if use_bedrock:
+    if use_model:
         confidence_summary = compute_confidence_summary(results, table_name)
         prompt = ANSWER_PROMPT.format(
             message=message,
+            dataset_catalog=get_dataset_catalog_context(),
+            sql=validated_sql,
             results=json.dumps(results[:30], indent=2),
             confidence_summary=confidence_summary,
         )
-        answer = invoke_model(prompt, role="answer", system_prompt=ANSWER_SYSTEM)
+        try:
+            answer = invoke_model(prompt, role="answer", system_prompt=ANSWER_SYSTEM)
+        except Exception as e:
+            logger.warning(f"Model answer generation failed, using simple formatter: {e}")
+            answer = _format_results_simple(results, message)
     else:
         answer = _format_results_simple(results, message)
 
@@ -321,16 +378,14 @@ def _handle_data_lookup(message: str, entities: dict, use_bedrock: bool) -> Chat
     )
 
 
-def _handle_chart(message: str, entities: dict, use_bedrock: bool) -> ChatResponse:
+def _handle_chart(message: str, entities: dict, use_model: bool) -> ChatResponse:
     """Handle chart intent."""
-    sql = _generate_sql(message, entities, use_bedrock)
-    settings = get_settings()
-    validated_sql = validate_sql(sql, settings.allowed_tables_list)
-    results = run_query(validated_sql)
+    sql = _generate_sql(message, entities, use_model)
+    _validated_sql, results = _run_query_with_fallback(sql, message, entities)
 
     table_name = entities.get("tables", ["reporting data"])[0] if entities.get("tables") else "reporting data"
 
-    chart = generate_chart(message, results, use_bedrock)
+    chart = generate_chart(message, results, use_model)
 
     answer = f"Here are the results visualized from {table_name.replace('_', ' ')}."
     if not chart:
@@ -353,7 +408,7 @@ def _handle_chart(message: str, entities: dict, use_bedrock: bool) -> ChatRespon
     )
 
 
-def _handle_explanation(message: str, entities: dict) -> ChatResponse:
+def _handle_explanation(message: str, entities: dict, use_model: bool) -> ChatResponse:
     """Handle explanation intent."""
     msg_lower = message.lower()
 
@@ -393,18 +448,27 @@ def _handle_explanation(message: str, entities: dict) -> ChatResponse:
 
     # Check if asking about what's available
     if any(w in msg_lower for w in ["available", "tables", "what data", "what can"]):
-        catalog = get_catalog_info()
-        if catalog:
-            lines = ["Here are the available reporting tables:\n"]
-            for entry in catalog:
-                lines.append(
-                    f"- **{entry['table_name']}** ({entry['domain']}): "
-                    f"{entry.get('description', 'N/A')} — ~{entry.get('row_count', '?')} rows"
-                )
-            answer = "\n".join(lines)
-        else:
-            answer = "The reporting catalog is not available. Please check the data directory."
+        answer = "Here are the sanitized CSV datasets available for analysis:\n\n" + get_dataset_catalog_context()
         return ChatResponse(type="answer", answer=answer)
+
+    if use_model:
+        try:
+            prompt = EXPLANATION_PROMPT.format(
+                message=message,
+                dataset_catalog=get_dataset_catalog_context(),
+            )
+            answer = invoke_model(prompt, role="answer", system_prompt=EXPLANATION_SYSTEM)
+            return ChatResponse(
+                type="answer",
+                answer=answer,
+                suggested_followups=[
+                    "Which CSV table is most relevant for this question?",
+                    "Show the data behind this explanation.",
+                    "Turn this into a report paragraph.",
+                ],
+            )
+        except Exception as e:
+            logger.warning(f"Model explanation failed, using simple explanation: {e}")
 
     # Generic explanation
     answer = (
@@ -423,17 +487,15 @@ def _handle_explanation(message: str, entities: dict) -> ChatResponse:
     )
 
 
-def _handle_recommendation(message: str, entities: dict, use_bedrock: bool) -> ChatResponse:
+def _handle_recommendation(message: str, entities: dict, use_model: bool) -> ChatResponse:
     """Handle recommendation intent."""
     # First get relevant data
-    sql = _generate_sql(message, entities, use_bedrock)
-    settings = get_settings()
-    validated_sql = validate_sql(sql, settings.allowed_tables_list)
-    results = run_query(validated_sql)
+    sql = _generate_sql(message, entities, use_model)
+    _validated_sql, results = _run_query_with_fallback(sql, message, entities)
 
     table_name = entities.get("tables", ["tb_patient_journey"])[0] if entities.get("tables") else "tb_patient_journey"
 
-    recommendation = generate_recommendations(message, results, table_name, use_bedrock)
+    recommendation = generate_recommendations(message, results, table_name, use_model)
 
     evidence = [EvidenceItem(table=table_name, metric="recommendation_basis", value=len(results))]
     quality_note = (
@@ -450,16 +512,14 @@ def _handle_recommendation(message: str, entities: dict, use_bedrock: bool) -> C
     )
 
 
-def _handle_report(message: str, entities: dict, use_bedrock: bool) -> ChatResponse:
+def _handle_report(message: str, entities: dict, use_model: bool) -> ChatResponse:
     """Handle report_text intent."""
-    sql = _generate_sql(message, entities, use_bedrock)
-    settings = get_settings()
-    validated_sql = validate_sql(sql, settings.allowed_tables_list)
-    results = run_query(validated_sql)
+    sql = _generate_sql(message, entities, use_model)
+    _validated_sql, results = _run_query_with_fallback(sql, message, entities)
 
     table_name = entities.get("tables", ["tb_patient_journey"])[0] if entities.get("tables") else "tb_patient_journey"
 
-    report = generate_report_text(message, results, table_name, use_bedrock)
+    report = generate_report_text(message, results, table_name, use_model)
 
     evidence = [EvidenceItem(table=table_name, metric="report_basis", value=len(results))]
     quality_note = compute_confidence_summary(results, table_name)
@@ -503,7 +563,7 @@ def _handle_clarification(message: str) -> ChatResponse:
 
 
 def _format_results_simple(results: list[dict], message: str) -> str:
-    """Simple text formatting of query results when Bedrock is unavailable."""
+    """Simple text formatting of query results when model calling is unavailable."""
     if not results:
         return "No results found for your query."
 
@@ -525,6 +585,7 @@ def _format_results_simple(results: list[dict], message: str) -> str:
             "data_confidence_score", "data_confidence_marker",
             "data_quality_issue_count", "data_quality_highest_severity",
             "record_id", "source_row_id", "source_file", "source_sheet", "source_row_number",
+            "patient_key", "commcare_id", "phone", "telephone", "email", "address",
         )]
         lines.append("- " + " | ".join(row_parts))
 

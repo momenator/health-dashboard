@@ -54,6 +54,58 @@ class ChatResponse(BaseModel):
     suggested_followups: list[str] | None = None
 
 
+# ---------- Upload / sanitization ----------
+
+class UploadSanitizationResponse(BaseModel):
+    table_name: str
+    original_filename: str
+    sanitized_filename: str
+    row_count: int
+    original_columns: list[str]
+    retained_columns: list[str]
+    removed_columns: list[str]
+    pseudonymized_columns: list[str]
+    redacted_cells: int
+    external_script_used: bool
+    message: str
+
+
+# ---------- Public context / news ----------
+
+PublicContextCategory = Literal[
+    "cyclone",
+    "outbreak",
+    "political",
+    "logistics",
+    "climate",
+    "health_system",
+    "economy",
+    "other",
+]
+
+
+class PublicContextItem(BaseModel):
+    id: str
+    title: str
+    date: str
+    source: str
+    source_url: str
+    category: PublicContextCategory
+    locations: list[str] = Field(default_factory=list)
+    summary: str
+    relevance: str
+    confidence: Literal["high", "medium", "low"] = "low"
+
+
+class PublicContextResponse(BaseModel):
+    project_id: str | None = None
+    region: str | None = None
+    source: str
+    generated_by: Literal["groq", "heuristic"]
+    items: list[PublicContextItem]
+    note: str
+
+
 # ---------- Intent classification ----------
 
 Intent = Literal[

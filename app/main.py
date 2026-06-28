@@ -16,13 +16,14 @@ settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
     debug=settings.app_debug,
-    description="AI-powered health program chatbot backend using Amazon Bedrock and Athena",
+    description="AI-powered health program chatbot backend using OpenAI and Athena",
     version="1.0.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.allowed_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,7 +36,8 @@ def healthcheck() -> dict:
     return {
         "status": "ok",
         "environment": settings.app_env,
-        "bedrock_enabled": settings.enable_bedrock,
+        "openai_enabled": settings.enable_openai,
+        "model_provider": settings.model_provider,
     }
 
 

@@ -72,8 +72,8 @@ ECS_LOG_GROUP="${ECS_LOG_GROUP:-/ecs/health-dashboard}"
 ECS_LOG_STREAM_PREFIX="${ECS_LOG_STREAM_PREFIX:-ecs}"
 ECS_ASSIGN_PUBLIC_IP="${ECS_ASSIGN_PUBLIC_IP:-ENABLED}"
 APP_ENV="${APP_ENV:-production}"
-ENABLE_BEDROCK="${ENABLE_BEDROCK:-true}"
-BEDROCK_MODEL_ID="${BEDROCK_MODEL_ID:-us.mistral.pixtral-large-2502-v1:0}"
+ENABLE_OPENAI="${ENABLE_OPENAI:-true}"
+OPENAI_MODEL="${OPENAI_MODEL:-gpt-5.5}"
 REPORT_STORAGE_BACKEND="${REPORT_STORAGE_BACKEND:-s3}"
 S3_REPORTS_PREFIX="${S3_REPORTS_PREFIX:-reports}"
 
@@ -97,6 +97,9 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   fill_from_terraform DATABASE_URL_SECRET_ARN database_url_secret_arn
 fi
 fill_from_terraform LOVABLE_API_KEY_SECRET_ARN lovable_api_key_secret_arn
+if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+  fill_from_terraform OPENAI_API_KEY_SECRET_ARN openai_api_key_secret_arn
+fi
 
 require_env AWS_REGION
 require_env ECS_SUBNET_IDS
@@ -105,6 +108,10 @@ require_env ECS_EXECUTION_ROLE_ARN
 require_env ECS_TASK_ROLE_ARN
 require_env ALLOWED_ORIGINS
 require_env REPORT_STORAGE_BACKEND
+if [[ "${ENABLE_OPENAI}" == "true" && -z "${OPENAI_API_KEY:-}" && -z "${OPENAI_API_KEY_SECRET_ARN:-}" ]]; then
+  echo "Missing required env var: OPENAI_API_KEY or OPENAI_API_KEY_SECRET_ARN" >&2
+  exit 1
+fi
 
 if [[ "${REPORT_STORAGE_BACKEND}" == "s3" ]]; then
   require_env S3_REPORTS_BUCKET
@@ -120,9 +127,9 @@ IMAGE_TAG="${IMAGE_TAG:-$(git rev-parse --short HEAD 2>/dev/null || date +%Y%m%d
 ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 IMAGE_URI="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 
-export AWS_REGION APP_ENV ENABLE_BEDROCK BEDROCK_MODEL_ID REPORT_STORAGE_BACKEND
+export AWS_REGION APP_ENV ENABLE_OPENAI OPENAI_MODEL REPORT_STORAGE_BACKEND
 export S3_REPORTS_PREFIX ALLOWED_ORIGINS DATABASE_URL DATABASE_URL_SECRET_ARN
-export S3_REPORTS_BUCKET LOVABLE_WEBHOOK_URL LOVABLE_API_KEY_SECRET_ARN
+export S3_REPORTS_BUCKET LOVABLE_WEBHOOK_URL LOVABLE_API_KEY_SECRET_ARN OPENAI_API_KEY OPENAI_API_KEY_SECRET_ARN
 export ECS_CLUSTER_NAME ECS_SERVICE_NAME ECS_TASK_FAMILY ECS_CONTAINER_NAME ECS_CONTAINER_PORT
 export ECS_CPU ECS_MEMORY ECS_DESIRED_COUNT ECS_LOG_GROUP ECS_LOG_STREAM_PREFIX
 export ECS_ASSIGN_PUBLIC_IP ECS_SUBNET_IDS ECS_SECURITY_GROUP_IDS ECS_TARGET_GROUP_ARN
@@ -174,19 +181,19 @@ env_vars = [
     {"name": "APP_PORT", "value": os.environ["ECS_CONTAINER_PORT"]},
     {"name": "AWS_REGION", "value": os.environ["AWS_REGION"]},
     {"name": "ALLOWED_ORIGINS", "value": os.environ["ALLOWED_ORIGINS"]},
-    {"name": "ENABLE_BEDROCK", "value": os.environ["ENABLE_BEDROCK"]},
-    {"name": "BEDROCK_MODEL_ID", "value": os.environ["BEDROCK_MODEL_ID"]},
+    {"name": "ENABLE_OPENAI", "value": os.environ["ENABLE_OPENAI"]},
+    {"name": "OPENAI_MODEL", "value": os.environ["OPENAI_MODEL"]},
     {"name": "REPORT_STORAGE_BACKEND", "value": os.environ["REPORT_STORAGE_BACKEND"]},
     {"name": "S3_REPORTS_PREFIX", "value": os.environ.get("S3_REPORTS_PREFIX", "reports")},
 ]
 
-for key in ["S3_REPORTS_BUCKET", "LOVABLE_WEBHOOK_URL", "DATABASE_URL"]:
+for key in ["S3_REPORTS_BUCKET", "LOVABLE_WEBHOOK_URL", "DATABASE_URL", "OPENAI_API_KEY"]:
     value = os.environ.get(key)
     if value:
         env_vars.append({"name": key, "value": value})
 
 secrets = []
-for key in ["DATABASE_URL_SECRET_ARN", "LOVABLE_API_KEY_SECRET_ARN"]:
+for key in ["DATABASE_URL_SECRET_ARN", "LOVABLE_API_KEY_SECRET_ARN", "OPENAI_API_KEY_SECRET_ARN"]:
     value = os.environ.get(key)
     if value:
         target_name = key.removesuffix("_SECRET_ARN")

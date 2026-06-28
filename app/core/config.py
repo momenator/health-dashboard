@@ -1,7 +1,6 @@
 from functools import lru_cache
-from typing import List
+from pathlib import Path
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,9 +21,21 @@ class Settings(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_session_token: str | None = None
 
-    # Bedrock
-    enable_bedrock: bool = False
-    bedrock_model_id: str = Field(default="us.mistral.pixtral-large-2502-v1:0")
+    # OpenAI
+    enable_openai: bool = False
+    openai_api_key: str | None = None
+    openai_model: str = "gpt-5.5"
+    openai_router_model: str | None = None
+    openai_query_model: str | None = None
+    openai_answer_model: str | None = None
+    openai_chart_model: str | None = None
+    openai_recommendation_model: str | None = None
+    openai_report_model: str | None = None
+
+    # Groq (optional, public-context ranking only)
+    groq_api_key: str | None = None
+    groq_model: str = "llama-3.1-8b-instant"
+    enable_groq_context: bool = False
 
     # Athena
     athena_database: str = "ai4good_health"
@@ -35,10 +46,16 @@ class Settings(BaseSettings):
     allowed_tables: str = "ambulance_causes,ambulance_trips,community_workers,mchp_patient_support,sensitization_activities,tb_patient_journey,reporting_catalog"
     max_query_rows: int = 1000
     data_dir: str = "data/reporting"
+    upload_raw_dir: str = "/tmp/health-dashboard/uploads/raw"
+    upload_quarantine_dir: str = "/tmp/health-dashboard/uploads/quarantine"
+    pii_sanitizer_script: str | None = None
 
     # CORS
     allowed_origins: str = (
-        "http://localhost:3000,http://localhost:5173,https://lovable.dev"
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,https://lovable.dev"
+    )
+    allowed_origin_regex: str | None = (
+        r"^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$"
     )
 
     # Lovable
@@ -58,19 +75,39 @@ class Settings(BaseSettings):
 
     @property
     def allowed_tables_list(self) -> list[str]:
-        return [t.strip() for t in self.allowed_tables.split(",") if t.strip()]
+        configured = [t.strip() for t in self.allowed_tables.split(",") if t.strip()]
+        discovered: list[str] = []
+        data_path = Path(self.data_dir)
+        if data_path.exists():
+            blocked_prefixes = ("private", "raw", "cleaned", "quality")
+            discovered = [
+                path.stem
+                for path in data_path.glob("*.csv")
+                if not path.stem.lower().startswith(blocked_prefixes)
+            ]
+        return list(dict.fromkeys([*configured, *discovered]))
 
-    def get_model_id(self, role: str) -> str:
-        """Get the model ID for a specific role, falling back to the default."""
+    @property
+    def llm_enabled(self) -> bool:
+        return self.enable_openai
+
+    @property
+    def model_provider(self) -> str:
+        if self.enable_openai:
+            return "openai"
+        return "disabled"
+
+    def get_openai_model_id(self, role: str) -> str:
+        """Get the OpenAI model ID for a specific role."""
         role_map = {
-            "router": self.bedrock_router_model_id,
-            "query": self.bedrock_query_model_id,
-            "answer": self.bedrock_answer_model_id,
-            "chart": self.bedrock_chart_model_id,
-            "recommendation": self.bedrock_recommendation_model_id,
-            "report": self.bedrock_report_model_id,
+            "router": self.openai_router_model,
+            "query": self.openai_query_model,
+            "answer": self.openai_answer_model,
+            "chart": self.openai_chart_model,
+            "recommendation": self.openai_recommendation_model,
+            "report": self.openai_report_model,
         }
-        return role_map.get(role) or self.bedrock_model_id
+        return role_map.get(role) or self.openai_model
 
 
 @lru_cache

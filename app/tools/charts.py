@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any
 
-from app.models.bedrock_client import invoke_model
+from app.models.model_client import invoke_model
 from app.models.prompts import CHART_PROMPT, CHART_SYSTEM
 from app.schemas import ChartPayload
 
@@ -16,27 +16,27 @@ logger = logging.getLogger(__name__)
 def generate_chart(
     message: str,
     query_results: list[dict[str, Any]],
-    use_bedrock: bool = True,
+    use_model: bool = True,
 ) -> ChartPayload | None:
     """Generate a chart configuration from query results.
 
-    Uses Bedrock to determine chart type and configuration,
+    Uses the configured model to determine chart type and configuration,
     or falls back to heuristic chart selection.
     """
     if not query_results:
         return None
 
-    if use_bedrock:
+    if use_model:
         try:
-            return _chart_via_bedrock(message, query_results)
+            return _chart_via_model(message, query_results)
         except Exception as e:
-            logger.warning(f"Bedrock chart generation failed, using heuristic: {e}")
+            logger.warning(f"Model chart generation failed, using heuristic: {e}")
 
     return _chart_heuristic(message, query_results)
 
 
-def _chart_via_bedrock(message: str, results: list[dict[str, Any]]) -> ChartPayload | None:
-    """Use Bedrock to generate chart configuration."""
+def _chart_via_model(message: str, results: list[dict[str, Any]]) -> ChartPayload | None:
+    """Use the configured model to generate chart configuration."""
     # Limit results for the prompt
     sample = results[:50]
     prompt = CHART_PROMPT.format(message=message, results=json.dumps(sample, indent=2))
@@ -54,7 +54,7 @@ def _chart_via_bedrock(message: str, results: list[dict[str, Any]]) -> ChartPayl
         chart_data = json.loads(json_str)
         return ChartPayload(**chart_data)
     except (json.JSONDecodeError, ValueError) as e:
-        logger.error(f"Failed to parse chart JSON from Bedrock: {e}")
+        logger.error(f"Failed to parse chart JSON from model: {e}")
         return _chart_heuristic(message, results)
 
 

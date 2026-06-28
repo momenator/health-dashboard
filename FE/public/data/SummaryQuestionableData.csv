@@ -1,0 +1,7 @@
+table_name,rows,columns,high_confidence_rows,medium_confidence_rows,low_confidence_rows,issue_count,critical_issue_count,warning_issue_count,info_issue_count
+amb_mchp_ambulance,146,26,146,0,0,138,0,0,138
+amb_mchp_ambulance_cause_sortie,248,14,248,0,0,0,0,0,0
+data_profess_sheet1,221,85,221,0,0,222,0,1,221
+donnees_export_sheet1,4495,153,4352,133,10,23805,19,1394,22392
+sens_mchp_sheet1,2075,99,2066,4,5,11276,10,17,11249
+sensibilisation_staffdfm_mafy_sensibilisation_staffdfm,71,97,71,0,0,213,0,0,213

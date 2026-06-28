@@ -2,27 +2,6 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "BedrockInference",
-      "Effect": "Allow",
-      "Action": [
-        "bedrock:InvokeModel",
-        "bedrock:InvokeModelWithResponseStream",
-        "bedrock:GetInferenceProfile",
-        "bedrock:ListInferenceProfiles",
-        "bedrock:RenderPrompt",
-        "bedrock:GetCustomModel",
-        "bedrock:ListCustomModels",
-        "bedrock:GetImportedModel",
-        "bedrock:ListImportedModels",
-        "bedrock:GetProvisionedModelThroughput",
-        "bedrock:ListProvisionedModelThroughputs",
-        "bedrock:GetGuardrail",
-        "bedrock:ListGuardrails",
-        "bedrock:ApplyGuardrail"
-      ],
-      "Resource": "*"
-    },
-    {
       "Sid": "ReportsBucketAccess",
       "Effect": "Allow",
       "Action": [

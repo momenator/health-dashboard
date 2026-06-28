@@ -6,9 +6,10 @@ import json
 import logging
 from typing import Any
 
-from app.models.bedrock_client import invoke_model
+from app.models.model_client import invoke_model
 from app.models.prompts import RECOMMENDATION_PROMPT, RECOMMENDATION_SYSTEM
 from app.tools.confidence import compute_confidence_summary
+from app.tools.schema import get_dataset_catalog_context
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ def generate_recommendations(
     message: str,
     evidence_data: list[dict[str, Any]],
     table_name: str,
-    use_bedrock: bool = True,
+    use_model: bool = True,
 ) -> str:
     """Generate operational recommendations based on data evidence.
 
@@ -25,20 +26,23 @@ def generate_recommendations(
         message: The user's original question.
         evidence_data: Query results used as evidence.
         table_name: The table the data came from.
-        use_bedrock: Whether to use Bedrock or return a placeholder.
+        use_model: Whether to use the configured model or return a placeholder.
 
     Returns:
         Recommendation text.
     """
     confidence_summary = compute_confidence_summary(evidence_data, table_name)
 
-    if not use_bedrock:
+    if not use_model:
         return _fallback_recommendation(evidence_data, table_name, confidence_summary)
 
     # Prepare evidence for prompt (limit size)
     evidence_sample = evidence_data[:30]
     prompt = RECOMMENDATION_PROMPT.format(
         message=message,
+        dataset_catalog=get_dataset_catalog_context(),
+        table_name=table_name,
+        row_count=len(evidence_data),
         evidence=json.dumps(evidence_sample, indent=2),
         confidence_summary=confidence_summary,
     )
@@ -48,17 +52,18 @@ def generate_recommendations(
             prompt,
             role="recommendation",
             system_prompt=RECOMMENDATION_SYSTEM,
+            max_tokens=3072,
         )
         return response
     except Exception as e:
-        logger.error(f"Bedrock recommendation failed: {e}")
+        logger.error(f"Model recommendation failed: {e}")
         return _fallback_recommendation(evidence_data, table_name, confidence_summary)
 
 
 def _fallback_recommendation(
     data: list[dict[str, Any]], table_name: str, confidence_summary: str
 ) -> str:
-    """Generate a simple fallback recommendation when Bedrock is unavailable."""
+    """Generate a simple fallback recommendation when the model is unavailable."""
     row_count = len(data)
     return (
         f"Based on {row_count} records from {table_name}, here are operational considerations:\n\n"

@@ -73,3 +73,7 @@ output "database_url_secret_arn" {
 output "lovable_api_key_secret_arn" {
   value = local.lovable_api_key_secret_arn
 }
+
+output "openai_api_key_secret_arn" {
+  value = local.openai_api_key_secret_arn
+}

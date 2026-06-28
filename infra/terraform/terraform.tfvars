@@ -18,8 +18,6 @@ allowed_ingress_cidr_blocks = [
   "0.0.0.0/0",
 ]
 
-bedrock_model_id = "us.mistral.pixtral-large-2502-v1:0"
-
 tags = {
   Owner = "hackathon-team"
 }

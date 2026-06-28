@@ -1,12 +1,12 @@
 # AI4Good Health Chatbot Backend
 
-AI-powered chatbot backend for the AI4Good health program. Uses Amazon Bedrock for natural language understanding and Athena (or local CSV fallback) for data queries over anonymized reporting datasets.
+AI-powered chatbot backend for the AI4Good health program. Uses OpenAI for natural language understanding and Athena (or local CSV fallback) for data queries over anonymized reporting datasets.
 
 ## Architecture
 
 ```
 Lovable Frontend → API Gateway → FastAPI on ECS → Router → Tool Handlers
-                                                         → Amazon Bedrock
+                                                         → OpenAI
                                                          → Athena / Local CSV
 ```
 
@@ -43,7 +43,7 @@ uv sync
 # 2. Copy environment config
 cp .env.example .env
 
-# 3. Run the server (Bedrock disabled, uses local CSV)
+# 3. Run the server (model provider optional, uses local CSV)
 uv run uvicorn app.main:app --reload --port 8000
 
 # 4. Test it
@@ -91,11 +91,37 @@ Returns table schemas and catalog info.
 
 Lists available reporting tables.
 
+### POST /upload-data
+
+Uploads a CSV or XLSX file and publishes only a sanitized CSV copy for downstream analysis.
+The raw upload is stored outside the reporting data directory; the chatbot and
+query tools only read the sanitized CSV written to `DATA_DIR`.
+
+Optional environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| PII_SANITIZER_SCRIPT | Path to an existing Python PII removal script. Expected interface: `python script.py <input_csv> <output_csv>` |
+| UPLOAD_RAW_DIR | Directory for raw uploads, outside `DATA_DIR` |
+| UPLOAD_QUARANTINE_DIR | Directory for uploads that fail sanitization |
+
+The built-in fallback sanitizer removes columns with common PII names, redacts
+emails/phone-like values/URLs in retained fields, and pseudonymizes trace IDs
+such as `record_id`.
+
+### GET /external-context
+
+Fetches public Madagascar context signals for uploaded M&E datasets and reports. The backend uses
+GDELT as the public web/news source and can optionally use Groq to rank and
+summarize relevance when `ENABLE_GROQ_CONTEXT=true` and `GROQ_API_KEY` is set.
+Uploaded health data is not sent to Groq; only project name/region and short
+aggregate change text are used.
+
 ## AWS Deployment
 
 ### Prerequisites
 
-- AWS account with Bedrock access enabled
+- OpenAI API key
 - Terraform installed
 - Docker (or compatible container runtime)
 
@@ -104,8 +130,12 @@ Lists available reporting tables.
 | Variable | Description | Required |
 |----------|-------------|----------|
 | AWS_REGION | AWS region | Yes |
-| ENABLE_BEDROCK | Enable Bedrock models | Yes (production) |
-| BEDROCK_MODEL_ID | Default Bedrock model | Yes (production) |
+| ENABLE_OPENAI | Enable OpenAI models | Yes |
+| OPENAI_API_KEY | OpenAI API key for backend model calls | Yes |
+| OPENAI_MODEL | Default OpenAI model | Yes |
+| ENABLE_GROQ_CONTEXT | Use Groq to rank/summarize public context signals | No |
+| GROQ_API_KEY | Groq API key for public-context ranking only | No |
+| GROQ_MODEL | Groq model for public-context ranking | No |
 | ATHENA_DATABASE | Glue/Athena database name | Yes (production) |
 | ATHENA_OUTPUT_S3 | S3 path for Athena results | Yes (production) |
 | ALLOWED_TABLES | Comma-separated allowed table names | Yes |
@@ -139,7 +169,6 @@ Repeat for each table.
 ### IAM Permissions
 
 The backend role needs:
-- `bedrock:InvokeModel` for selected model
 - `athena:StartQueryExecution`, `athena:GetQueryExecution`, `athena:GetQueryResults`
 - `glue:GetDatabase`, `glue:GetTable`, `glue:GetTables`
 - `s3:GetObject` for reporting/ prefix only
@@ -177,7 +206,8 @@ app/
 ├── core/
 │   └── config.py        # Settings & environment variables
 ├── models/
-│   ├── bedrock_client.py # Amazon Bedrock wrapper
+│   ├── model_client.py   # Model wrapper
+│   ├── openai_client.py  # OpenAI Responses API wrapper
 │   └── prompts.py       # Prompt templates per role
 └── tools/
     ├── athena.py        # SQL validation & query execution

@@ -17,10 +17,9 @@ allowed_ingress_cidr_blocks = [
   "0.0.0.0/0",
 ]
 
-bedrock_model_id = "us.mistral.pixtral-large-2502-v1:0"
-
 # Use an existing secret ARN if you already created one.
 # db_secret_arn = "arn:aws:secretsmanager:eu-central-1:123456789012:secret:health-dashboard/database-url"
+# openai_api_key_secret_arn = "arn:aws:secretsmanager:eu-central-1:123456789012:secret:health-dashboard/openai-api-key"
 
 # Optional if you use Lovable webhooks.
 # lovable_webhook_url = "https://your-lovable-app.example/api/report-callback"

@@ -1,1 +1,1 @@
-"""Models package - Bedrock client and prompt templates."""
+"""Models package - OpenAI client and prompt templates."""

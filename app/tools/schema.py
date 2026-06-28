@@ -13,6 +13,40 @@ from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+SENSITIVE_COLUMN_TOKENS = {
+    "record_id",
+    "source_row_id",
+    "source_file",
+    "source_sheet",
+    "source_row_number",
+    "patient_key",
+    "commcare",
+    "case_id",
+    "formid",
+    "hq_user",
+    "phone",
+    "telephone",
+    "email",
+    "address",
+    "cin",
+    "photo",
+    "name",
+    "nom",
+    "prenom",
+    "naissance",
+    "birth",
+    "numero_labo",
+    "numero_laboratoire",
+    "numero_cdt",
+    "number.",
+    "completed_time",
+    "started_time",
+    "received_on",
+    "activity_uid",
+    "worker_id",
+    "agent",
+}
+
 
 @lru_cache
 def get_table_schemas() -> dict[str, list[str]]:
@@ -45,8 +79,37 @@ def get_schema_description() -> str:
     lines = []
     for table_name, columns in schemas.items():
         lines.append(f"Table: {table_name}")
-        lines.append(f"  Columns: {', '.join(columns)}")
+        safe_columns = [column for column in columns if _is_prompt_safe_column(column)]
+        lines.append(f"  Columns: {', '.join(safe_columns)}")
         lines.append("")
+    return "\n".join(lines)
+
+
+def get_dataset_catalog_context(max_columns: int = 28) -> str:
+    """Return compact context about sanitized CSV datasets for model prompts."""
+    schemas = get_table_schemas()
+    catalog_by_table = {
+        (entry.get("table_name") or entry.get("reporting_table") or ""): entry
+        for entry in get_catalog_info()
+    }
+    lines: list[str] = []
+
+    for table_name, columns in schemas.items():
+        entry = catalog_by_table.get(table_name, {})
+        visible_columns = [column for column in columns if _is_prompt_safe_column(column)]
+        shown_columns = visible_columns[:max_columns]
+        remaining = max(0, len(visible_columns) - len(shown_columns))
+        row_count = entry.get("rows") or entry.get("row_count") or _count_csv_rows(table_name)
+        domain = entry.get("domain") or _infer_domain(table_name)
+        grain = entry.get("grain") or "uploaded/sanitized records"
+        column_text = ", ".join(shown_columns)
+        if remaining:
+            column_text += f", ... (+{remaining} more)"
+        lines.append(
+            f"- {table_name}: domain={domain}; grain={grain}; rows={row_count}; "
+            f"columns={column_text}"
+        )
+
     return "\n".join(lines)
 
 
@@ -66,11 +129,12 @@ def explain_table(table_name: str) -> str | None:
     """Get a human-readable explanation of a table from the catalog."""
     catalog = get_catalog_info()
     for entry in catalog:
-        if entry.get("table_name") == table_name:
+        entry_table = entry.get("table_name") or entry.get("reporting_table")
+        if entry_table == table_name:
             return (
                 f"Table '{table_name}' is in the '{entry.get('domain', 'unknown')}' domain. "
                 f"Grain: {entry.get('grain', 'unknown')}. "
-                f"Contains approximately {entry.get('row_count', 'unknown')} rows. "
+                f"Contains approximately {entry.get('row_count') or entry.get('rows', 'unknown')} rows. "
                 f"Description: {entry.get('description', 'No description available')}."
             )
     return None
@@ -100,3 +164,23 @@ def explain_column(column_name: str) -> str:
     if column_name in metadata_columns:
         return metadata_columns[column_name]
     return f"Column '{column_name}' - check the table schema for context."
+
+
+def _count_csv_rows(table_name: str) -> int | str:
+    settings = get_settings()
+    csv_path = Path(settings.data_dir) / f"{table_name}.csv"
+    if not csv_path.exists():
+        return "unknown"
+    with open(csv_path, "r", encoding="utf-8") as f:
+        return max(0, sum(1 for _ in f) - 1)
+
+
+def _infer_domain(table_name: str) -> str:
+    if table_name.startswith("uploaded_"):
+        return "uploaded"
+    return table_name.split("_", 1)[0]
+
+
+def _is_prompt_safe_column(column_name: str) -> bool:
+    normalized = column_name.lower()
+    return not any(token in normalized for token in SENSITIVE_COLUMN_TOKENS)

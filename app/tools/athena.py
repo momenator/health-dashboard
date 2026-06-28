@@ -34,6 +34,36 @@ BLOCKED_TABLE_PATTERNS = [
     r"\bquality[_.]",
 ]
 
+BLOCKED_COLUMN_TOKENS = [
+    "record_id",
+    "source_row_id",
+    "source_file",
+    "source_sheet",
+    "source_row_number",
+    "patient_key",
+    "commcare",
+    "case_id",
+    "formid",
+    "hq_user",
+    "phone",
+    "telephone",
+    "email",
+    "address",
+    "cin",
+    "photo",
+    "date_de_naissance",
+    "numero_labo",
+    "numero_laboratoire",
+    "numero_cdt",
+    "number.",
+    "completed_time",
+    "started_time",
+    "received_on",
+    "activity_uid",
+    "worker_id",
+    "agent",
+]
+
 
 class SQLValidationError(Exception):
     """Raised when SQL fails safety validation."""
@@ -62,6 +92,13 @@ def validate_sql(sql: str, allowed_tables: list[str]) -> str:
             raise SQLValidationError(
                 "Query references restricted tables (private/raw/cleaned/quality). "
                 "Only reporting tables are accessible."
+            )
+
+    for token in BLOCKED_COLUMN_TOKENS:
+        if token in sql_lower:
+            raise SQLValidationError(
+                "Query references restricted identifier columns. "
+                "Only anonymized aggregate reporting fields are accessible."
             )
 
     # Verify only allowed tables are referenced
@@ -194,6 +231,10 @@ def execute_local_query(sql: str) -> list[dict[str, Any]]:
         group_cols = [c.strip() for c in group_match.group(1).split(",")]
         select_clause = select_match.group(1)
         rows = _apply_group_by(rows, group_cols, select_clause)
+    elif select_match:
+        aggregate_rows = _apply_simple_aggregates(rows, select_match.group(1))
+        if aggregate_rows is not None:
+            rows = aggregate_rows
 
     # Apply ORDER BY
     order_match = re.search(r'\bORDER\s+BY\s+([\w\s,]+?)(?:\bLIMIT\b|$)', sql, re.IGNORECASE)
@@ -207,7 +248,7 @@ def execute_local_query(sql: str) -> list[dict[str, Any]]:
         limit = int(limit_match.group(1))
         rows = rows[:limit]
 
-    return rows
+    return [_strip_restricted_fields(row) for row in rows]
 
 
 def _apply_simple_where(rows: list[dict], clause: str) -> list[dict]:
@@ -251,6 +292,19 @@ def _apply_group_by(rows: list[dict], group_cols: list[str], select_clause: str)
     return result
 
 
+def _apply_simple_aggregates(rows: list[dict], select_clause: str) -> list[dict] | None:
+    """Apply non-grouped aggregate SELECTs supported by the local fallback."""
+    count_match = re.fullmatch(
+        r"\s*COUNT\s*\(\s*\*?\s*\)\s*(?:AS\s+)?(\w+)?\s*",
+        select_clause,
+        re.IGNORECASE,
+    )
+    if count_match:
+        return [{count_match.group(1) or "count": str(len(rows))}]
+
+    return None
+
+
 def _apply_order_by(rows: list[dict], clause: str) -> list[dict]:
     """Apply ORDER BY sorting."""
     parts = clause.split(",")
@@ -274,10 +328,18 @@ def run_query(sql: str) -> list[dict[str, Any]]:
 
     if settings.app_env == "production" and settings.athena_output_s3:
         try:
-            return execute_athena_query(validated_sql)
+            return [_strip_restricted_fields(row) for row in execute_athena_query(validated_sql)]
         except Exception as e:
             logger.error(f"Athena query failed: {e}")
             raise
     else:
         logger.info("Using local CSV fallback for query execution.")
         return execute_local_query(validated_sql)
+
+
+def _strip_restricted_fields(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in row.items()
+        if not any(token in key.lower() for token in BLOCKED_COLUMN_TOKENS)
+    }

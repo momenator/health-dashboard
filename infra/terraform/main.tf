@@ -3,15 +3,6 @@ locals {
   task_policy_statements = concat(
     [
       {
-        Sid    = "BedrockInference"
-        Effect = "Allow"
-        Action = [
-          "bedrock:InvokeModel",
-          "bedrock:InvokeModelWithResponseStream",
-        ]
-        Resource = "*"
-      },
-      {
         Sid    = "ReportsBucketAccess"
         Effect = "Allow"
         Action = [
@@ -21,7 +12,7 @@ locals {
         Resource = "${aws_s3_bucket.reports.arn}/*"
       },
     ],
-    local.database_url_secret_arn != null || local.lovable_api_key_secret_arn != null ? [
+    local.database_url_secret_arn != null || local.lovable_api_key_secret_arn != null || local.openai_api_key_secret_arn != null ? [
       {
         Sid    = "ReadSecrets"
         Effect = "Allow"
@@ -31,6 +22,7 @@ locals {
         Resource = compact([
           local.database_url_secret_arn,
           local.lovable_api_key_secret_arn,
+          local.openai_api_key_secret_arn,
         ])
       }
     ] : [],
@@ -146,9 +138,23 @@ resource "aws_secretsmanager_secret_version" "lovable_api_key_placeholder" {
   secret_string = "REPLACE_ME"
 }
 
+resource "aws_secretsmanager_secret" "openai_api_key" {
+  count                   = var.openai_api_key_secret_arn == null && var.create_openai_api_key_secret_placeholder ? 1 : 0
+  name                    = "${var.project_name}/openai-api-key"
+  recovery_window_in_days = 0
+  tags                    = local.common_tags
+}
+
+resource "aws_secretsmanager_secret_version" "openai_api_key_placeholder" {
+  count         = var.openai_api_key_secret_arn == null && var.create_openai_api_key_secret_placeholder ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.openai_api_key[0].id
+  secret_string = "REPLACE_ME"
+}
+
 locals {
   database_url_secret_arn    = var.db_secret_arn != null ? var.db_secret_arn : try(aws_secretsmanager_secret.db_url[0].arn, null)
   lovable_api_key_secret_arn = var.lovable_api_key_secret_arn != null ? var.lovable_api_key_secret_arn : try(aws_secretsmanager_secret.lovable_api_key[0].arn, null)
+  openai_api_key_secret_arn  = var.openai_api_key_secret_arn != null ? var.openai_api_key_secret_arn : try(aws_secretsmanager_secret.openai_api_key[0].arn, null)
 }
 
 resource "aws_iam_role_policy" "ecs_task" {

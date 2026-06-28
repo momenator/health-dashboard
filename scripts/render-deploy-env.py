@@ -75,6 +75,7 @@ def main() -> int:
         "reports_bucket_name",
         "database_url_secret_arn",
         "lovable_api_key_secret_arn",
+        "openai_api_key_secret_arn",
     ]
     missing = [key for key in required_output_keys if key not in outputs]
     if missing:
@@ -104,6 +105,7 @@ def main() -> int:
         "S3_REPORTS_BUCKET": get_output(outputs, "reports_bucket_name"),
         "DATABASE_URL_SECRET_ARN": get_output(outputs, "database_url_secret_arn"),
         "LOVABLE_API_KEY_SECRET_ARN": get_output(outputs, "lovable_api_key_secret_arn"),
+        "OPENAI_API_KEY_SECRET_ARN": get_output(outputs, "openai_api_key_secret_arn"),
     }
 
     defaults = {
@@ -116,8 +118,9 @@ def main() -> int:
         "ECS_HEALTHCHECK_GRACE_PERIOD_SECONDS": existing.get("ECS_HEALTHCHECK_GRACE_PERIOD_SECONDS", "60"),
         "APP_ENV": existing.get("APP_ENV", "production"),
         "ALLOWED_ORIGINS": existing.get("ALLOWED_ORIGINS", ""),
-        "ENABLE_BEDROCK": existing.get("ENABLE_BEDROCK", "true"),
-        "BEDROCK_MODEL_ID": existing.get("BEDROCK_MODEL_ID", "us.mistral.pixtral-large-2502-v1:0"),
+        "ENABLE_OPENAI": existing.get("ENABLE_OPENAI", "true"),
+        "OPENAI_MODEL": existing.get("OPENAI_MODEL", "gpt-5.5"),
+        "OPENAI_API_KEY": existing.get("OPENAI_API_KEY", ""),
         "REPORT_STORAGE_BACKEND": existing.get("REPORT_STORAGE_BACKEND", "s3"),
         "S3_REPORTS_PREFIX": existing.get("S3_REPORTS_PREFIX", "reports"),
         "LOVABLE_WEBHOOK_URL": existing.get("LOVABLE_WEBHOOK_URL", ""),
@@ -157,8 +160,10 @@ def main() -> int:
         "",
         f"APP_ENV={quote(defaults['APP_ENV'])}",
         f"ALLOWED_ORIGINS={quote(defaults['ALLOWED_ORIGINS'])}",
-        f"ENABLE_BEDROCK={quote(defaults['ENABLE_BEDROCK'])}",
-        f"BEDROCK_MODEL_ID={quote(defaults['BEDROCK_MODEL_ID'])}",
+        f"ENABLE_OPENAI={quote(defaults['ENABLE_OPENAI'])}",
+        f"OPENAI_MODEL={quote(defaults['OPENAI_MODEL'])}",
+        f"OPENAI_API_KEY={quote(defaults['OPENAI_API_KEY'])}",
+        f"OPENAI_API_KEY_SECRET_ARN={quote(values['OPENAI_API_KEY_SECRET_ARN'])}",
         "",
         f"REPORT_STORAGE_BACKEND={quote(defaults['REPORT_STORAGE_BACKEND'])}",
         f"S3_REPORTS_BUCKET={quote(values['S3_REPORTS_BUCKET'])}",

@@ -14,6 +14,19 @@ def test_health_endpoint():
     assert data["status"] == "ok"
 
 
+def test_cors_allows_local_dev_ports():
+    response = client.options(
+        "/chat",
+        headers={
+            "Origin": "http://127.0.0.1:5174",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://127.0.0.1:5174"
+
+
 def test_chat_data_lookup():
     """Test a basic data lookup question."""
     response = client.post("/chat", json={
@@ -21,8 +34,10 @@ def test_chat_data_lookup():
     })
     assert response.status_code == 200
     data = response.json()
-    assert data["type"] in ("answer", "error")
+    assert data["type"] == "answer"
     assert "answer" in data
+    assert any(count in data["answer"] for count in ("Total Count", "4,495", "4495"))
+    assert "patient_key" not in data["answer"]
 
 
 def test_chat_chart_request():

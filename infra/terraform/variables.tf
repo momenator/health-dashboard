@@ -85,12 +85,6 @@ variable "desired_count" {
   default     = 1
 }
 
-variable "bedrock_model_id" {
-  description = "Bedrock model ID exposed to the task."
-  type        = string
-  default     = "us.mistral.pixtral-large-2502-v1:0"
-}
-
 variable "allowed_origins" {
   description = "CORS origins for the frontend."
   type        = list(string)
@@ -122,6 +116,18 @@ variable "create_lovable_api_key_secret_placeholder" {
 
 variable "lovable_api_key_secret_arn" {
   description = "Existing LOVABLE_API_KEY secret ARN."
+  type        = string
+  default     = null
+}
+
+variable "create_openai_api_key_secret_placeholder" {
+  description = "Create an empty Secrets Manager secret placeholder for OPENAI_API_KEY."
+  type        = bool
+  default     = true
+}
+
+variable "openai_api_key_secret_arn" {
+  description = "Existing OPENAI_API_KEY secret ARN."
   type        = string
   default     = null
 }
