@@ -65,3 +65,21 @@ async def list_tables() -> dict:
     """List available reporting tables."""
     catalog = get_catalog_info()
     return {"tables": catalog}
+
+
+@router.post("/report/annual")
+async def annual_report_endpoint(
+    year: str | None = None,
+    _: None = Depends(verify_api_key),
+) -> dict:
+    """Generate an annual PDF report from all CSV data.
+
+    Returns the path to the generated PDF file.
+    """
+    from app.tools.annual_report import generate_annual_report
+
+    try:
+        output_path = generate_annual_report(year=year)
+        return {"status": "ok", "path": str(output_path)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
