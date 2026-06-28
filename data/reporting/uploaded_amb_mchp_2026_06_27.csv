@@ -1,0 +1,147 @@
+form.site,form.csb,Suite,form.date_denregistrement,DUREE,DISTANCE,ISSUE,ISSUE_CHILD,CAUSE_SORTIE,HEURE_APPEL,HEURE_DEPART_BUREAU,HEURE_ARIVE_AU_CSB,type,HOPITAL_REFERENCE,DUREE_APPEL_DEPART_BUREAU,DEPART_BUREAU_ARRIVE_AU_CSB,DUREE_APPE_ARRIVE_AU_CSB
+Manambaro,Ihazoambo,evacuation_hpital_de_rfrence,[REDACTED],9.62,67,gurie,deces_mfiu,autre,07:20,07:30,09:08,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],1.8
+Manambaro,Manambaro,evacuation_hpital_de_rfrence,[REDACTED],18.62,2,gurie,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,18:00,18:11,18:22,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Soanierana,evacuation_hpital_de_rfrence,[REDACTED],10.55,22,gurie,bebe_vivant_a_terme,autre,09:46,09:53,10:17,Femme enceinte,SALFA Manambaro,[REDACTED],0.4,[REDACTED]
+Manambaro,Ranopiso,evacuation_hpital_de_rfrence,[REDACTED],18.22,28,gurie,autres,autre,17:05,17:12,17:31,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Ankilivalo,evacuation_hpital_de_rfrence,[REDACTED],19.17,10,gurie,bebe_vivant_a_terme,hta_svre__pr-clampsie__eclampsie,18:22,18:39,19:01,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],0.65
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],19.17,10,gurie,bebe_vivant_a_terme,hta_svre__pr-clampsie__eclampsie,18:22,18:39,19:01,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],0.65
+Manambaro,Ankilivalo,evacuation_hpital_de_rfrence,[REDACTED],19,42,dcede,deces_postnatal,autre,17:41,18:00,18:47,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],1.1
+Manambaro,Manambaro,evacuation_hpital_de_rfrence,[REDACTED],6.97,4,gurie,bebe_vivant_a_terme,autre,06:00,06:23,06:30,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],0.5
+Manambaro,Mandiso,evacuation_hpital_de_rfrence,[REDACTED],16.58,60,gurie,deces_mfiu,autre,14:25,14:40,16:20,Femme enceinte,SALFA Manambaro,0.25,[REDACTED],[REDACTED]
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],9.5,98,gurie,vivant_premature,autre,06:19,06:21,09:15,Femme enceinte,SALFA Ejeda,[REDACTED],2.9,[REDACTED]
+Ejeda,Ampanihy,evacuation_hpital_de_rfrence,[REDACTED],11.45,99,gurie,bebe_vivant_a_terme,autre,08:12,08:26,11:15,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],3.05
+Ejeda,Ejeda,evacuation_hpital_de_rfrence,[REDACTED],7.65,1,gurie,deces_mfiu,autre,06:45,07:00,07:10,Femme enceinte,SALFA Ejeda,0.25,[REDACTED],[REDACTED]
+Ejeda,Beroy,evacuation_hpital_de_rfrence,[REDACTED],9.67,108,gurie,bebe_vivant_a_terme,dystocie__travail_obstructif,06:05,06:20,09:20,Femme enceinte,SALFA Ejeda,0.25,3,3.25
+Manambaro,Ankaramena,evacuation_hpital_de_rfrence,[REDACTED],18.93,14,gurie,bebe_vivant_a_terme,autre,18:12,18:31,18:43,Femme enceinte,SALFA Manambaro,[REDACTED],0.2,[REDACTED]
+Manambaro,Ranopiso,evacuation_hpital_de_rfrence,[REDACTED],14.43,22,gurie,deces_mfiu,autre,13:16,13:32,14:06,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],7.42,85,gurie,bebe_vivant_a_terme,autre,04:50,05:16,07:15,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],16.42,47,gurie,bebe_vivant_a_terme,autre,11:12,11:20,16:06,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],4.9
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],18.63,39,dcede,bebe_vivant_a_terme,autre,17:50,17:58,18:27,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Manambaro,evacuation_hpital_de_rfrence,[REDACTED],14.33,2,gurie,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,13:47,13:58,14:05,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],0.3
+Manambaro,Ankaramena,evacuation_hpital_de_rfrence,[REDACTED],9.52,15,gurie,bebe_vivant_a_terme,dystocie__travail_obstructif,09:00,09:17,09:26,Femme enceinte,SALFA Manambaro,[REDACTED],0.15,[REDACTED]
+Ejeda,Beahitse,evacuation_hpital_de_rfrence,[REDACTED],12.17,194,gurie,deces_mfiu,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,09:24,09:30,11:51,Femme enceinte,SALFA Ejeda,0.1,2.35,2.45
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],8.15,90,gurie,bebe_vivant_a_terme,autre,05:18,05:30,07:30,Femme enceinte,SALFA Ejeda,0.2,2,2.2
+Manambaro,Ihazoambo,evacuation_hpital_de_rfrence,[REDACTED],11.33,70,autre,deces_mfiu,autre,09:30,09:35,11:00,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],1.5
+Manambaro,Mandiso,evacuation_hpital_de_rfrence,[REDACTED],12.97,62,gurie,bebe_vivant_a_terme,autre,10:50,11:08,11:21,Femme enceinte,SALFA Manambaro,0.3,[REDACTED],[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],22.42,16,gurie,bebe_vivant_a_terme,autre,21:15,21:25,21:54,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],0.65
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],20.48,17,gurie,bebe_vivant_a_terme,autre,19:47,19:57,20:13,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Ifarantsa,evacuation_hpital_de_rfrence,[REDACTED],5.57,41,gurie,bebe_vivant_a_terme,hta_svre__pr-clampsie__eclampsie,04:15,04:22,05:10,Femme enceinte,SALFA Manambaro,[REDACTED],0.8,[REDACTED]
+Manambaro,Nosy be,evacuation_hpital_de_rfrence,[REDACTED],9.8,14,gurie,bebe_vivant_a_terme,autre,08:55,09:14,09:26,Femme enceinte,SALFA Manambaro,[REDACTED],0.2,[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],12.47,21,gurie,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,11:56,12:00,12:15,Femme enceinte,SALFA Manambaro,[REDACTED],0.25,[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],15.33,72,gurie,deces_mfiu,autre,07:20,07:30,09:00,Femme enceinte,SALFA Ejeda,[REDACTED],1.5,[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],8.5,70,gurie,bebe_vivant_a_terme,autre,06:25,07:33,08:15,Femme enceinte,SALFA Ejeda,[REDACTED],0.7,[REDACTED]
+Ejeda,Beahitse,soins_au_csb,[REDACTED],14.75,53,gurie,bebe_vivant_a_terme,autre,13:20,13:50,14:34,Femme enceinte,SALFA Ejeda,0.5,[REDACTED],[REDACTED]
+Ejeda,Beroy,evacuation_hpital_de_rfrence,[REDACTED],16.67,87,encore_malade_decharge,autres,autre,14:28,14:40,16:11,Femme enceinte,SALFA Ejeda,0.2,[REDACTED],[REDACTED]
+Ejeda,Beahitse,soins_au_csb,[REDACTED],14.75,53,gurie,bebe_vivant_a_terme,autre,13:30,13:50,14:34,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Beroy,evacuation_hpital_de_rfrence,[REDACTED],12.83,98,gurie,deces_mfiu,autre,10:22,10:30,12:17,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Beroy,evacuation_hpital_de_rfrence,[REDACTED],16.75,94,gurie,deces_mfiu,grossesse_extra-utrine__molaire,14:20,14:30,16:21,Femme enceinte,SALFA Ejeda,[REDACTED],1.85,[REDACTED]
+Ejeda,Beahitse,evacuation_hpital_de_rfrence,[REDACTED],13.17,91,gurie,deces_mfiu,grossesse_extra-utrine__molaire,11:00,11:10,12:21,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],1.35
+Manambaro,Soanierana,evacuation_hpital_de_rfrence,[REDACTED],13.3,50,gurie,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,12:30,12:48,13:04,Femme enceinte,SALFA Manambaro,0.3,[REDACTED],[REDACTED]
+Manambaro,Ankaramena,evacuation_hpital_de_rfrence,[REDACTED],16.93,14,gurie,deces_postnatal,dystocie__travail_obstructif,16:00,16:10,16:51,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],0.85
+Manambaro,Mahatalaky,evacuation_hpital_de_rfrence,[REDACTED],14.65,85,gurie,deces_mfiu,dystocie__travail_obstructif,12:32,12:44,14:26,Femme enceinte,SALFA Manambaro,0.2,1.7,1.9
+Manambaro,Tsagnoriha,evacuation_hpital_de_rfrence,[REDACTED],11.9,65,dcede,deces_mfiu,travail_prmatur dystocie__travail_obstructif autre,09:29,09:35,11:25,Femme enceinte,SALFA Manambaro,0.1,[REDACTED],[REDACTED]
+Ejeda,Beahitse,evacuation_hpital_de_rfrence,[REDACTED],20.83,54,gurie,autres,grossesse_extra-utrine__molaire,17:58,18:08,19:24,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],12,91,gurie,grossesse_evolutive,autre,09:46,10:10,11:46,Femme enceinte,SALFA Ejeda,0.4,1.6,2
+Ejeda,Ejeda,evacuation_hpital_de_rfrence,[REDACTED],17.6,1,gurie,deces_mfiu,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,16:24,16:59,17:06,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],0.7
+Ejeda,Manakaravavy,evacuation_hpital_de_rfrence,[REDACTED],6.3,53,gurie,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,04:02,04:20,05:50,Femme enceinte,SALFA Ejeda,0.3,1.5,1.8
+Ejeda,Beahitse,evacuation_hpital_de_rfrence,[REDACTED],6.5,51,gurie,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,04:15,04:30,06:00,Femme enceinte,SALFA Ejeda,0.25,1.5,1.75
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.5,113,gurie,grossesse_evolutive,autre,06:00,06:20,08:31,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],16.67,96,gurie,autres,autre,15:10,15:20,16:25,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],1.25
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],14.97,34,gurie,deces_postnatal,autre,13:30,13:40,14:49,Femme enceinte,SALFA Ejeda,[REDACTED],1.15,[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],17.7,17,gurie,bebe_vivant_a_terme,autre,16:53,17:00,17:19,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Ifarantsa,evacuation_hpital_de_rfrence,[REDACTED],12.45,55,gurie,bebe_vivant_a_terme,autre,10:50,10:54,12:08,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],1.3
+Manambaro,Ankaramena,evacuation_hpital_de_rfrence,[REDACTED],9.23,12,gurie,bebe_vivant_a_terme,autre,08:30,08:57,09:07,Femme enceinte,SALFA Manambaro,0.45,[REDACTED],[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],20.17,14,gurie,bebe_vivant_a_terme,hta_svre__pr-clampsie__eclampsie,19:00,19:22,19:56,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],6.17,14,gurie,bebe_vivant_a_terme,autre,05:43,05:50,06:00,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Beahitse,evacuation_hpital_de_rfrence,[REDACTED],12.95,50,gurie,grossesse_evolutive,autre,11:00,11:30,12:40,Femme enceinte,SALFA Ejeda,0.5,[REDACTED],[REDACTED]
+Ejeda,Ampanihy,evacuation_hpital_de_rfrence,[REDACTED],12.75,106,gurie,deces_mfiu,procidence_du_cordon,09:26,10:00,12:21,Femme enceinte,SALFA Ejeda,[REDACTED],2.35,[REDACTED]
+Ejeda,Ejeda,evacuation_hpital_de_rfrence,[REDACTED],20.12,2,gurie,bebe_vivant_a_terme,autre,19:42,20:00,20:02,Femme enceinte,SALFA Ejeda,0.3,[REDACTED],[REDACTED]
+Ejeda,Ejeda,evacuation_hpital_de_rfrence,[REDACTED],4.97,3,gurie,bebe_vivant_a_terme,autre,04:30,04:50,04:55,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],9,47,gurie,deces_mfiu,autre,06:49,07:10,08:20,Femme enceinte,SALFA Ejeda,0.35,[REDACTED],[REDACTED]
+Manambaro,Magnalo,evacuation_hpital_de_rfrence,[REDACTED],12.78,27,gurie,autres,avortement_compliqu,11:42,11:50,12:25,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.75,86,gurie,bebe_vivant_a_terme,autre,04:04,06:40,09:10,Femme enceinte,SALFA Ejeda,2.6,2.5,5.1
+Ejeda,Sakamasay,evacuation_hpital_de_rfrence,[REDACTED],15.92,45,gurie,deces_mfiu,autre,14:40,15:00,15:40,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],1
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],13.13,18,gurie,bebe_vivant_a_terme,autre,12:08,12:15,12:51,Femme enceinte,SALFA Manambaro,[REDACTED],0.6,[REDACTED]
+Manambaro,Magnalo,evacuation_hpital_de_rfrence,[REDACTED],12.78,27,gurie,autres,avortement_compliqu,11:42,11:50,12:25,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Manambaro,Soanierana,evacuation_hpital_de_rfrence,[REDACTED],11.85,22,encore_malade_decharge,bebe_vivant_a_terme,hmorragie_ante-_ou_post-partum_placenta_praevia_hrp_rupture_utrine_etc,11:21,11:24,11:50,Femme enceinte,SALFA Manambaro,0.05,[REDACTED],[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],10.03,18,gurie,bebe_vivant_a_terme,autre,09:20,09:30,09:51,Femme enceinte,SALFA Manambaro,[REDACTED],0.35,[REDACTED]
+Manambaro,Ifarantsa,evacuation_hpital_de_rfrence,[REDACTED],19.02,41,gurie,deces_mfiu,travail_prmatur hta_svre__pr-clampsie__eclampsie autre,17:32,17:47,18:39,Femme enceinte,SALFA Manambaro,0.25,[REDACTED],[REDACTED]
+Manambaro,Magnalo,evacuation_hpital_de_rfrence,[REDACTED],9.03,20,gurie,bebe_vivant_a_terme,dystocie__travail_obstructif,08:00,08:12,08:52,Femme enceinte,SALFA Manambaro,0.2,[REDACTED],[REDACTED]
+Manambaro,Soanierana,evacuation_hpital_de_rfrence,[REDACTED],9.68,20,gurie,bebe_vivant_a_terme,hta_svre__pr-clampsie__eclampsie,09:10,09:30,09:35,Femme enceinte,SALFA Manambaro,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],9.77,40,gurie,grossesse_evolutive,autre,08:11,08:30,09:28,Femme enceinte,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],17.63,40,gurie,grossesse_evolutive,autre,16:19,16:28,17:18,Femme enceinte,SALFA Ejeda,0.15,[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],11.98,78,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,07:04,10:14,11:43,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],4.65
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.5,74,guri,NAN,paludisme_grave anmie_severe,03:19,06:36,08:50,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],8.42,98,guri,NAN,detresse_respiratoire,03:12,06:21,08:10,Enfant,SALFA Ejeda,3.15,[REDACTED],[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],12.15,72,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique fievre_infection_grave_non_paludisme,06:44,09:51,11:50,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.1
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],12.15,72,dced,NAN,paludisme_grave anmie_severe,06:44,09:51,11:50,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.1
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],17.37,41,guri,NAN,detresse_respiratoire,12:50,16:05,17:11,Enfant,SALFA Ejeda,3.25,1.1,4.35
+Ejeda,Ampanihy,evacuation_hpital_de_rfrence,[REDACTED],10.32,98,guri,NAN,paludisme_grave anmie_severe,04:00,07:11,10:06,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],6.1
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],14.3,88,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,07:16,10:25,14:06,Enfant,SALFA Ejeda,3.15,[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],17.6,86,guri,NAN,detresse_respiratoire anmie_severe,12:24,15:37,17:23,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],18.15,100,dced,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,12:19,15:25,17:55,Enfant,SALFA Ejeda,3.1,2.5,5.6
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],13.65,92,guri,NAN,paludisme_grave anmie_severe,06:42,09:50,13:29,Enfant,SALFA Ejeda,[REDACTED],3.65,[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],10.15,87,guri,NAN,anmie_severe autre,04:26,07:39,09:55,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],18.12,98,guri,NAN,paludisme_grave anmie_severe,12:40,15:45,17:50,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],8.03,73,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,01:59,05:07,07:41,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.7
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],7.72,72,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,01:58,05:10,07:33,Enfant,SALFA Ejeda,3.2,[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],19.07,98,guri,NAN,detresse_respiratoire paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,13:32,16:45,18:54,Enfant,SALFA Ejeda,[REDACTED],2.15,[REDACTED]
+Manambaro,Ifarantsa,evacuation_hpital_de_rfrence,[REDACTED],14.07,42,decharge,NAN,paludisme_grave anmie_severe,09:51,13:00,13:51,Enfant,SALFA Manambaro,3.15,0.85,4
+Manambaro,Ifarantsa,evacuation_hpital_de_rfrence,[REDACTED],12.83,32,guri,NAN,malnutrition_severe diarrhe_severe_cholera,08:10,11:21,11:45,Enfant,SALFA Manambaro,[REDACTED],0.4,[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],16.5,89,guri,NAN,detresse_respiratoire paludisme_grave anmie_severe,11:10,14:20,16:00,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],11.07,67,guri,NAN,paludisme_grave autre,04:20,09:38,10:50,Enfant,SALFA Ejeda,5.3,1.2,6.5
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],18.17,59,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,13:34,16:45,17:56,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],8.17,81,guri,NAN,paludisme_grave malnutrition_severe,02:40,06:20,07:50,Enfant,SALFA Ejeda,[REDACTED],1.5,[REDACTED]
+Manambaro,Analandravy,evacuation_hpital_de_rfrence,[REDACTED],14.92,74,guri,NAN,autre,11:00,14:08,14:38,Enfant,SALFA Manambaro,[REDACTED],0.5,[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],7.25,80,dced,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,01:42,05:00,06:55,Enfant,SALFA Ejeda,3.3,[REDACTED],[REDACTED]
+Ejeda,Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],13.33,43,guri,NAN,fievre_infection_grave_non_paludisme autre,08:08,13:20,13:20,Enfant,SALFA Ejeda,5.2,0,5.2
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],11.83,78,guri,NAN,detresse_respiratoire paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,06:36,09:40,11:19,Enfant,SALFA Ejeda,[REDACTED],1.65,[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],16,73,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,07:32,14:30,15:44,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],8.2
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],12.05,69,guri,NAN,paludisme_grave anmie_severe,07:40,10:46,11:40,Enfant,SALFA Ejeda,3.1,0.9,4
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],12.27,100,guri,NAN,paludisme_grave anmie_severe,07:12,10:20,11:55,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],13.8,86,guri,NAN,paludisme_grave anmie_severe,08:22,11:47,13:30,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],12.3,69,guri,NAN,anmie_severe,06:56,10:00,12:05,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.15
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],19.13,86,guri,NAN,paludisme_grave anmie_severe,13:16,16:39,18:46,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.5
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.97,83,dced,NAN,paludisme_grave,04:10,07:34,09:45,Enfant,SALFA Ejeda,3.4,[REDACTED],[REDACTED]
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],9.63,37,dced,NAN,paludisme_grave anmie_severe,05:26,08:26,09:29,Enfant,SALFA Ejeda,3,1.05,4.05
+Ejeda,Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],7.43,42,decharge,NAN,paludisme_grave anmie_severe,02:56,06:10,07:14,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],4.3
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],8.32,38,guri,NAN,paludisme_grave anmie_severe,03:12,06:40,07:47,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],15.37,94,guri,NAN,anmie_severe,10:12,13:38,15:12,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],18.37,99,guri,NAN,paludisme_grave anmie_severe,13:10,16:26,18:10,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],15.82,94,guri,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,10:42,14:00,15:34,Enfant,SALFA Ejeda,3.3,[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],16.48,82,guri,NAN,paludisme_grave anmie_severe,11:20,14:40,16:16,Enfant,SALFA Ejeda,[REDACTED],1.6,[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],19.75,98,guri,NAN,paludisme_grave anmie_severe,14:12,17:50,19:30,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.3
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],9.92,85,guri,NAN,paludisme_grave anmie_severe,04:15,08:00,09:20,Enfant,SALFA Ejeda,3.75,[REDACTED],[REDACTED]
+Ejeda,Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],15.72,85,dced,NAN,paludisme_grave anmie_severe convulsions__etat_de_mal_epileptique,10:00,13:10,14:26,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],10.5,41,decharge,NAN,anomalie_congnitale,05:00,08:30,09:30,Enfant,SALFA Ejeda,3.5,1,4.5
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],19.05,73,guri,NAN,paludisme_grave anmie_severe,13:10,16:20,18:41,Enfant,SALFA Ejeda,[REDACTED],2.35,[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],17.98,72,guri,NAN,paludisme_grave anmie_severe,12:16,15:30,17:40,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],5.4
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.75,86,guri,NAN,paludisme_grave anmie_severe,01:04,06:40,09:10,Enfant,SALFA Ejeda,5.6,2.5,8.1
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],10.17,89,guri,NAN,paludisme_grave anmie_severe,04:32,08:00,09:40,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.98,96,dced,NAN,paludisme_grave anmie_severe,03:56,07:15,09:28,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],11,86,guri,NAN,paludisme_grave anmie_severe,05:28,08:35,10:45,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],[REDACTED]
+Ejeda,Belafike,evacuation_hpital_de_rfrence,[REDACTED],16,59,guri,NAN,paludisme_grave anmie_severe,11:30,14:40,15:45,Enfant,SALFA Ejeda,[REDACTED],[REDACTED],4.25
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],18.13,89,guri,NAN,anmie_severe,12:29,15:44,17:45,Enfant,SALFA Ejeda,3.25,[REDACTED],[REDACTED]
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.15,84,guri,NAN,paludisme_grave anmie_severe,04:12,07:30,08:45,Enfant,SALFA Ejeda,3.3,1.25,4.55
+Ejeda,Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],10.28,35,guri,NAN,paludisme_grave anmie_severe,05:50,09:08,10:05,Enfant,SALFA Ejeda,3.3,0.95,4.25
+Ejeda,Vohitany,evacuation_hpital_de_rfrence,[REDACTED],12.78,84,guri,NAN,paludisme_grave anmie_severe,07:30,11:18,12:30,Enfant,SALFA Ejeda,3.8,1.2,5
+Ejeda,Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],9.67,40,guri,NAN,paludisme_grave anmie_severe,05:12,08:45,09:15,Enfant,SALFA Ejeda,3.55,0.5,4.05
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],8.4,86,guri,NAN,autre,0,06:15,08:11,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB2 Belafika Ambony,evacuation_hpital_de_rfrence,[REDACTED],11.25,42,guri,NAN,autre,0,09:19,11:07,Autre,SALFA Ejeda,,1.8,
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],20.2,98,guri,NAN,infection_grave_paludisme_svre_septicmie,0,18:29,19:58,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB1 Ambatovaky,evacuation_hpital_de_rfrence,[REDACTED],14.47,42,guri,NAN,urgence_cardiaquerespiratoire_crise_cardiaque_dtresse_respiratoire,0,13:13,14:11,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],12.65,86,guri,NAN,infection_grave_paludisme_svre_septicmie,0,10:34,12:20,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB2 Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],19.15,100,guri,NAN,urgence_neurologique_avc_convulsions_coma,0,15:25,18:57,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],8.17,147,guri,NAN,urgence_abdominale_appendicite_abdomen_aigu_occlusion,0,05:46,07:48,Autre,SALFA Ejeda,,[REDACTED],
+Manambaro,AUTRE,evacuation_hpital_de_rfrence,[REDACTED],21.03,41,guri,NAN,traumatismeaccident_avp_chute_blessure_brlure,0,20:30,20:59,Autre,SALFA Manambaro,,[REDACTED],
+Manambaro,AUTRE,evacuation_hpital_de_rfrence,[REDACTED],21.03,41,guri,NAN,traumatismeaccident_avp_chute_blessure_brlure,0,20:30,20:59,Autre,SALFA Manambaro,,[REDACTED],
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],12,91,guri,NAN,urgence_abdominale_appendicite_abdomen_aigu_occlusion,0,10:10,11:46,Autre,SALFA Ejeda,,1.6,
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.27,113,decharge,NAN,urgence_cardiaquerespiratoire_crise_cardiaque_dtresse_respiratoire,0,06:20,09:10,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB2 Vohitany,evacuation_hpital_de_rfrence,[REDACTED],9.5,113,guri,NAN,autre,0,06:20,08:31,Autre,SALFA Ejeda,,[REDACTED],
+Manambaro,SALFA MANAMBARO,evacuation_hpital_de_rfrence,[REDACTED],10.32,43,guri,NAN,autre,0,10:15,10:17,Autre,SALFA Manambaro,,[REDACTED],
+Ejeda,CSB2 Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],12.7,70,dced,NAN,infection_grave_paludisme_svre_septicmie,0,10:13,12:28,Autre,SALFA Ejeda,,2.25,
+Manambaro,CSB2 Ankaramena,evacuation_hpital_de_rfrence,[REDACTED],15.9,37,guri,NAN,urgence_neurologique_avc_convulsions_coma,0,15:30,15:37,Autre,SALFA Manambaro,,[REDACTED],
+Ejeda,CSB2 Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],10,42,dced,NAN,urgence_neurologique_avc_convulsions_coma,0,08:40,09:45,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB2 Gogogogo,evacuation_hpital_de_rfrence,[REDACTED],14.17,64,guri,NAN,infection_grave_paludisme_svre_septicmie,0,12:15,13:13,Autre,SALFA Ejeda,,[REDACTED],
+Ejeda,CSB1 Ampitanaky,evacuation_hpital_de_rfrence,[REDACTED],13.27,77,decharge,NAN,traumatismeaccident_avp_chute_blessure_brlure,0,11:28,12:51,Autre,SALFA Ejeda,,[REDACTED],
+Manambaro,SALFA MANAMBARO,evacuation_hpital_de_rfrence,[REDACTED],11.08,50,guri,NAN,autre,0,09:10,10:05,Autre,SALFA Manambaro,,[REDACTED],

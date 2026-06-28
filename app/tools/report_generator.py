@@ -182,16 +182,65 @@ def _build_dashboard(kpis: dict, scope: str, project: str | None) -> dict[str, A
 
 
 def _build_project_chapters(kpis: dict, scope: str, project: str | None) -> list[dict]:
-    """Build project chapter summaries."""
+    """Build project chapter summaries with AI narratives."""
+    settings = get_settings()
+
     chapters = [
-        {"id": "mchp_patient_support", "title": "Financial Access and Patient Support", "purpose": "Reduce financial barriers to healthcare for vulnerable populations.", "status": "active"},
-        {"id": "ambulance_trips", "title": "Ambulance and Emergency Referrals", "purpose": "Provide emergency transport for patients who cannot reach health facilities.", "status": "active"},
-        {"id": "tb_patient_journey", "title": "Tuberculosis Patient Journey", "purpose": "Screen, diagnose, and treat TB patients through community-based case finding.", "status": "active"},
-        {"id": "community_workers", "title": "Community Health Workers", "purpose": "Deploy trained community agents to extend health service coverage.", "status": "active"},
-        {"id": "sensitization_activities", "title": "Community Mobilization", "purpose": "Raise health awareness and generate referrals through community activities.", "status": "active"},
+        {
+            "id": "mchp_patient_support",
+            "title": "Financial Access and Patient Support",
+            "purpose": "Reduce financial barriers to healthcare for vulnerable populations.",
+            "status": "active",
+            "metrics": {"cases": kpis["mchp_cases"], "sites": kpis["mchp_sites"], "dfm_share": f"{kpis['mchp_dfm_share']:.1f}%", "catastrophic_avoided": kpis["mchp_catastrophic_avoided"]},
+        },
+        {
+            "id": "ambulance_trips",
+            "title": "Ambulance and Emergency Referrals",
+            "purpose": "Provide emergency transport for patients who cannot reach health facilities.",
+            "status": "active",
+            "metrics": {"trips": kpis["ambulance_trips"], "distance_km": f"{kpis['ambulance_total_distance']:.0f}", "median_response_hrs": f"{kpis['ambulance_median_response']:.2f}", "cure_rate": f"{kpis['ambulance_cured_rate']:.1f}%"},
+        },
+        {
+            "id": "tb_patient_journey",
+            "title": "Tuberculosis Patient Journey",
+            "purpose": "Screen, diagnose, and treat TB patients through community-based case finding.",
+            "status": "active",
+            "metrics": {"records": kpis["tb_records"], "positive": kpis["tb_positive"], "treatments_started": kpis["tb_treatment_starts"], "centers": kpis["tb_diagnostic_centers"]},
+        },
+        {
+            "id": "community_workers",
+            "title": "Community Health Workers",
+            "purpose": "Deploy trained community agents to extend health service coverage.",
+            "status": "active",
+            "metrics": {"total": kpis["workers_total"], "active": kpis["workers_active"], "active_rate": f"{kpis['workers_active_rate']:.0f}%", "trained": kpis["workers_trained"], "with_bicycle": kpis["workers_bicycle"]},
+        },
+        {
+            "id": "sensitization_activities",
+            "title": "Community Mobilization",
+            "purpose": "Raise health awareness and generate referrals through community activities.",
+            "status": "active",
+            "metrics": {"activities": kpis["sensitization_activities"], "participants": kpis["sensitization_participants"], "referrals": kpis["sensitization_referrals"]},
+        },
     ]
+
     if scope == "individual" and project:
-        return [c for c in chapters if c["id"] == project]
+        chapters = [c for c in chapters if c["id"] == project]
+
+    # Generate per-chapter narratives if Bedrock is available
+    if settings.enable_bedrock:
+        for chapter in chapters:
+            try:
+                metrics_str = ", ".join(f"{k}: {v}" for k, v in chapter["metrics"].items())
+                chapter["narrative"] = invoke_model(
+                    f"""Write a 150-word project summary for '{chapter['title']}' in a DfM annual report.
+Metrics: {metrics_str}
+Purpose: {chapter['purpose']}
+Include: what went well, what needs attention, recommended next step. Be specific with numbers.""",
+                    role="report", max_tokens=800, temperature=0.3
+                )
+            except Exception:
+                chapter["narrative"] = None
+
     return chapters
 
 
@@ -216,27 +265,39 @@ def _generate_executive_summary(kpis: dict, report_type: str, scope: str, projec
         return f"Executive summary for {_get_type_label(report_type)} covering {_get_period_label('annual_2026')}."
 
     audience_instruction = {
-        "internal": "Write for project managers. Focus on what needs attention, what is working, operational risks, and recommended actions. Be direct and specific.",
-        "donor": "Write for donors/funders. Focus on impact, people reached, services delivered, challenges managed transparently. Be warm and credible.",
-        "portfolio_review": "Write for senior leadership. Focus on cross-project performance, strategic progress, learning, and priorities for next period.",
+        "internal": "Write for project managers. Focus on what needs attention, what is working, operational risks, and recommended actions. Be direct and specific. Include a 'Management Attention Needed' section.",
+        "donor": "Write for donors/funders. Focus on impact, people reached, services delivered, challenges managed transparently. Be warm and credible. Include 'What your support enabled' framing.",
+        "portfolio_review": """Write for senior leadership conducting an annual portfolio review. This should be comprehensive and substantive. Include:
+1. Overall portfolio performance summary (what happened across all projects)
+2. Cross-project themes and patterns
+3. Major achievements and milestones
+4. Key challenges and how they were managed
+5. Strategic progress against program goals
+6. What we learned this year
+7. Priorities and outlook for next period
+8. Resource allocation observations
+
+Be analytical, not just descriptive. Connect metrics to strategic meaning. Identify what the numbers tell us about program maturity, coverage gaps, and operational efficiency.""",
     }.get(report_type, "")
 
-    prompt = f"""Write a 200-word executive summary for a DfM health program report.
+    word_count = "800-1000" if report_type == "portfolio_review" else "400-500" if report_type == "donor" else "300-400"
+
+    prompt = f"""Write a {word_count}-word executive summary for a Doctors for Madagascar (DfM) health program report.
 
 {audience_instruction}
 
 Key metrics:
-- Patient support: {kpis['mchp_cases']} cases, DfM covered {kpis['mchp_dfm_share']:.1f}% of costs
-- Ambulance: {kpis['ambulance_trips']} trips, {kpis['ambulance_total_distance']:.0f} km, median response {kpis['ambulance_median_response']:.2f} hrs
-- TB: {kpis['tb_records']} records, {kpis['tb_positive']} positive, {kpis['tb_treatment_starts']} treatments started
-- Community workers: {kpis['workers_active']} active of {kpis['workers_total']}
-- Sensitization: {kpis['sensitization_activities']} activities, {kpis['sensitization_participants']} participants
-- Data confidence: {kpis['confidence_rate']:.1f}% high confidence
+- Patient support (MCHP): {kpis['mchp_cases']} cases across {kpis['mchp_sites']} sites, DfM covered {kpis['mchp_dfm_share']:.1f}% of costs, {kpis['mchp_catastrophic_avoided']} catastrophic expenses avoided
+- Ambulance: {kpis['ambulance_trips']} trips, {kpis['ambulance_total_distance']:.0f} km total distance, median response {kpis['ambulance_median_response']:.2f} hours, cure rate {kpis['ambulance_cured_rate']:.1f}%
+- TB program: {kpis['tb_records']} patient journey records, {kpis['tb_positive']} positive cases detected, {kpis['tb_treatment_starts']} treatments started, {kpis['tb_diagnostic_centers']} diagnostic centers active
+- Community workers: {kpis['workers_total']} total, {kpis['workers_active']} active ({kpis['workers_active_rate']:.0f}%), {kpis['workers_trained']} trained, {kpis['workers_materials']} with materials, {kpis['workers_bicycle']} with bicycles
+- Sensitization: {kpis['sensitization_activities']} activities, {kpis['sensitization_participants']} participants reached, {kpis['sensitization_referrals']} referrals made
+- Data confidence: {kpis['confidence_rate']:.1f}% high confidence records
 
-Do not invent facts. Be specific with numbers. Keep it to 200 words."""
+Do not invent facts. Be specific with numbers. Use markdown formatting with headers."""
 
     try:
-        return invoke_model(prompt, role="report", max_tokens=1000, temperature=0.3)
+        return invoke_model(prompt, role="report", max_tokens=4000, temperature=0.3)
     except Exception as e:
         logger.error(f"Executive summary generation failed: {e}")
         return "Executive summary generation failed. Please retry."
@@ -248,22 +309,39 @@ def _generate_insights(kpis: dict, report_type: str, scope: str, project: str | 
     if not settings.enable_bedrock:
         return [{"title": "Data available", "severity": "low", "evidence": "All tables loaded", "action": "Review metrics"}]
 
-    prompt = f"""Based on these health program KPIs, generate 3-5 actionable insights as JSON array.
+    insight_count = "8-10" if report_type == "portfolio_review" else "5-7"
 
-Metrics:
-- Patient support: {kpis['mchp_cases']} cases across {kpis['mchp_sites']} sites
-- Ambulance: {kpis['ambulance_trips']} trips, cure rate {kpis['ambulance_cured_rate']:.1f}%, median response {kpis['ambulance_median_response']:.2f} hrs
-- TB: {kpis['tb_positive']} positive of {kpis['tb_records']} screened, {kpis['tb_treatment_starts']} started treatment
-- Workers: {kpis['workers_active_rate']:.0f}% active, {kpis['workers_trained']} trained
-- Sensitization: {kpis['sensitization_referrals']} referrals from {kpis['sensitization_activities']} activities
+    prompt = f"""Based on these health program KPIs, generate {insight_count} actionable insights as a JSON array.
 
-Each insight must have: title, severity (high/medium/low), evidence, possible_explanation, recommended_action, suggested_owner.
-Do not invent data. Use cautious language for hypotheses.
+Program data (Doctors for Madagascar, southern Madagascar):
+- Patient support (MCHP): {kpis['mchp_cases']} cases across {kpis['mchp_sites']} sites, DfM covered {kpis['mchp_dfm_share']:.1f}%, catastrophic expenses avoided: {kpis['mchp_catastrophic_avoided']}
+- Ambulance: {kpis['ambulance_trips']} trips, total {kpis['ambulance_total_distance']:.0f} km, cure rate {kpis['ambulance_cured_rate']:.1f}%, median response {kpis['ambulance_median_response']:.2f} hrs
+- TB: {kpis['tb_positive']} positive of {kpis['tb_records']} screened, {kpis['tb_treatment_starts']} started treatment, {kpis['tb_diagnostic_centers']} diagnostic centers
+- Community workers: {kpis['workers_total']} total, {kpis['workers_active_rate']:.0f}% active, {kpis['workers_trained']} trained, {kpis['workers_bicycle']} have bicycles, {kpis['workers_financial']} have financial support
+- Sensitization: {kpis['sensitization_referrals']} referrals from {kpis['sensitization_activities']} activities reaching {kpis['sensitization_participants']} participants
+- Data quality: {kpis['confidence_rate']:.1f}% high confidence, {kpis['confidence_counts']['low']} low-confidence records
 
+Generate insights that cover:
+- Performance outliers (good or concerning)
+- Operational bottlenecks
+- Resource gaps (e.g., workers without bicycles affecting coverage)
+- Data quality issues affecting decisions
+- Cross-project connections (e.g., sensitization referrals → TB detection)
+- High-impact opportunities
+
+Each insight MUST have these fields:
+- title: clear action-oriented title
+- severity: "high" | "medium" | "low"
+- evidence: cite specific metrics
+- possible_explanation: operational/contextual hypothesis (use cautious language)
+- recommended_action: specific next step
+- suggested_owner: "Project Manager" | "M&E Team" | "Data Manager" | "Field Team" | "Finance" | "Senior Leadership"
+
+Do not invent data. Use language like "This may indicate" or "Possible explanation."
 Respond ONLY with a JSON array."""
 
     try:
-        response = invoke_model(prompt, role="answer", max_tokens=2000, temperature=0.3)
+        response = invoke_model(prompt, role="answer", max_tokens=4000, temperature=0.3)
         clean = response.strip()
         if clean.startswith("```"):
             clean = clean.split("```")[1]
@@ -276,11 +354,11 @@ Respond ONLY with a JSON array."""
 
 
 def _generate_audience_section(kpis: dict, report_type: str, scope: str, project: str | None) -> dict[str, Any]:
-    """Generate audience-specific section content."""
+    """Generate audience-specific section content with AI narratives."""
     settings = get_settings()
 
     if report_type == "internal":
-        return {
+        content = {
             "type": "internal",
             "sections": ["management_actions", "data_issues", "operational_risks", "followup_questions"],
             "followup_questions": [
@@ -288,16 +366,78 @@ def _generate_audience_section(kpis: dict, report_type: str, scope: str, project
                 "How many TB patients started but didn't complete treatment?",
                 "Which community workers haven't been supervised recently?",
                 "What are the low-confidence records affecting?",
+                "What is the referral-to-detection conversion rate from sensitization?",
             ],
         }
+        if settings.enable_bedrock:
+            try:
+                content["narrative"] = invoke_model(
+                    f"""Write a 400-word 'Management Actions Required' section for DfM internal review.
+Based on: {kpis['ambulance_trips']} ambulance trips (response {kpis['ambulance_median_response']:.2f} hrs), {kpis['tb_treatment_starts']} TB treatments started of {kpis['tb_positive']} positive, {kpis['workers_active_rate']:.0f}% worker activity rate, {kpis['workers_bicycle']} of {kpis['workers_total']} workers have bicycles.
+Include: top 5 priority actions with severity, operational risks, decisions needed this quarter. Use markdown headers.""",
+                    role="report", max_tokens=2000, temperature=0.3
+                )
+            except Exception:
+                pass
+        return content
+
     elif report_type == "donor":
-        return {
+        content = {
             "type": "donor",
             "sections": ["what_went_well", "who_benefited", "challenges", "outlook"],
             "people_reached": kpis["mchp_cases"] + kpis["ambulance_trips"] + kpis["sensitization_participants"],
         }
-    else:
-        return {
+        if settings.enable_bedrock:
+            try:
+                content["narrative"] = invoke_model(
+                    f"""Write a 600-word donor impact narrative for Doctors for Madagascar.
+Data: {kpis['mchp_cases']} patients supported financially, {kpis['mchp_catastrophic_avoided']} catastrophic expenses avoided, {kpis['ambulance_trips']} emergency transports ({kpis['ambulance_cured_rate']:.0f}% positive outcomes), {kpis['tb_positive']} TB cases found and {kpis['tb_treatment_starts']} started treatment, {kpis['workers_active']} community health workers active, {kpis['sensitization_participants']} people reached through outreach.
+
+Structure with markdown headers:
+## What Your Support Enabled
+## Who Benefited  
+## Challenges We Are Managing
+## Why Continued Support Matters
+
+Be warm, credible, specific with numbers. Do not invent stories or quotes.""",
+                    role="report", max_tokens=3000, temperature=0.3
+                )
+            except Exception:
+                pass
+        return content
+
+    else:  # portfolio_review
+        content = {
             "type": "portfolio_review",
-            "sections": ["portfolio_themes", "cross_project_learning", "strategic_progress", "outlook"],
+            "sections": ["portfolio_themes", "cross_project_learning", "strategic_progress", "achievements", "gaps", "outlook"],
         }
+        if settings.enable_bedrock:
+            try:
+                content["narrative"] = invoke_model(
+                    f"""Write a comprehensive 1000-word Annual Portfolio Review narrative for Doctors for Madagascar senior leadership.
+
+Portfolio data:
+- 5 active projects: Patient Support, Ambulance, TB, Community Workers, Sensitization
+- Patient Support: {kpis['mchp_cases']} cases, {kpis['mchp_sites']} sites, DfM covers {kpis['mchp_dfm_share']:.1f}% of costs, {kpis['mchp_catastrophic_avoided']} catastrophic expenses avoided
+- Ambulance: {kpis['ambulance_trips']} trips, {kpis['ambulance_total_distance']:.0f} km, median response {kpis['ambulance_median_response']:.2f} hrs, {kpis['ambulance_cured_rate']:.1f}% cure rate
+- TB: {kpis['tb_records']} journey records, {kpis['tb_positive']} positive cases, {kpis['tb_treatment_starts']} treatments, {kpis['tb_diagnostic_centers']} centers
+- Community Workers: {kpis['workers_total']} total, {kpis['workers_active']} active ({kpis['workers_active_rate']:.0f}%), {kpis['workers_trained']} trained, {kpis['workers_bicycle']} with bicycles, {kpis['workers_financial']} with financial support
+- Sensitization: {kpis['sensitization_activities']} activities, {kpis['sensitization_participants']} participants, {kpis['sensitization_referrals']} referrals
+- Data: {kpis['confidence_rate']:.1f}% high confidence across {sum(kpis['confidence_counts'].values())} total records
+
+Structure with these markdown headers:
+## Portfolio Performance Overview
+## Cross-Project Themes and Patterns
+## Major Achievements
+## Strategic Progress
+## What We Learned
+## Remaining Gaps and Challenges
+## Priorities for Next Period
+## Data Maturity and M&E
+
+Be analytical. Connect metrics to strategic meaning. Identify program maturity indicators. Do not invent facts.""",
+                    role="report", max_tokens=4000, temperature=0.3
+                )
+            except Exception:
+                pass
+        return content
