@@ -28,7 +28,7 @@ class EvidenceItem(BaseModel):
 
 
 class ChartPayload(BaseModel):
-    type: Literal["bar", "line", "pie", "table"]
+    type: Literal["bar", "line", "pie"]
     title: str
     xKey: str | None = None
     yKey: str | None = None

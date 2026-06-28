@@ -208,6 +208,17 @@ def build_pdf(kpis: dict[str, Any], narratives: dict[str, str], output_path: Pat
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=20)
 
+    # Use DejaVu for Unicode support (accented French characters)
+    font_dir = Path(__file__).parent / "fonts"
+    if font_dir.exists() and (font_dir / "DejaVuSans.ttf").exists():
+        pdf.add_font("DejaVu", "", str(font_dir / "DejaVuSans.ttf"))
+        pdf.add_font("DejaVu", "B", str(font_dir / "DejaVuSans-Bold.ttf"))
+        pdf.add_font("DejaVu", "I", str(font_dir / "DejaVuSans-Oblique.ttf"))
+        font_family = "DejaVu"
+    else:
+        # Fallback: strip non-latin1 characters for Helvetica
+        font_family = "Helvetica"
+
     year = kpis["reporting_year"]
     generated = datetime.now().strftime("%Y-%m-%d %H:%M")
 
@@ -252,11 +263,11 @@ def build_pdf(kpis: dict[str, Any], narratives: dict[str, str], output_path: Pat
     pdf.ln()
     pdf.set_font("Helvetica", "", 9)
     for src in kpis["source_coverage"]:
-        pdf.cell(col_widths[0], 6, str(src["table"])[:25], border=1)
-        pdf.cell(col_widths[1], 6, str(src["rows"]), border=1)
-        pdf.cell(col_widths[2], 6, str(src["columns"]), border=1)
-        pdf.cell(col_widths[3], 6, str(src["domain"]), border=1)
-        pdf.cell(col_widths[4], 6, str(src["grain"])[:25], border=1)
+        pdf.cell(col_widths[0], 6, _safe_text(str(src["table"])[:25]), border=1)
+        pdf.cell(col_widths[1], 6, _safe_text(str(src["rows"])), border=1)
+        pdf.cell(col_widths[2], 6, _safe_text(str(src["columns"])), border=1)
+        pdf.cell(col_widths[3], 6, _safe_text(str(src["domain"])), border=1)
+        pdf.cell(col_widths[4], 6, _safe_text(str(src["grain"])[:25]), border=1)
         pdf.ln()
 
     # --- Patient Support ---
@@ -290,7 +301,7 @@ def build_pdf(kpis: dict[str, Any], narratives: dict[str, str], output_path: Pat
         pdf.cell(0, 8, "Top Ambulance Causes", new_x="LMARGIN", new_y="NEXT")
         pdf.set_font("Helvetica", "", 9)
         for cause, count in kpis["ambulance_top_causes"][:7]:
-            pdf.cell(0, 6, f"  - {cause}: {int(count)}", new_x="LMARGIN", new_y="NEXT")
+            pdf.cell(0, 6, _safe_text(f"  - {cause}: {int(count)}"), new_x="LMARGIN", new_y="NEXT")
 
     # --- TB ---
     pdf.add_page()
@@ -352,11 +363,24 @@ def build_pdf(kpis: dict[str, Any], narratives: dict[str, str], output_path: Pat
     return output_path
 
 
+def _safe_text(text: str) -> str:
+    """Sanitize text for PDF output - replace non-latin1 characters."""
+    # Replace common Unicode characters with ASCII equivalents
+    replacements = {
+        '\u2019': "'", '\u2018': "'", '\u201c': '"', '\u201d': '"',
+        '\u2013': '-', '\u2014': '-', '\u2026': '...', '\u00a0': ' ',
+    }
+    for orig, repl in replacements.items():
+        text = text.replace(orig, repl)
+    # Replace remaining non-latin1 chars
+    return text.encode('latin-1', errors='replace').decode('latin-1')
+
+
 def _section_header(pdf: FPDF, title: str, size: int = 16):
     """Add a styled section header."""
     pdf.set_font("Helvetica", "B", size)
     pdf.set_text_color(0, 51, 102)
-    pdf.cell(0, 12, title, new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 12, _safe_text(title), new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(2)
 
@@ -364,7 +388,7 @@ def _section_header(pdf: FPDF, title: str, size: int = 16):
 def _write_paragraph(pdf: FPDF, text: str):
     """Write a multi-line paragraph."""
     pdf.set_font("Helvetica", "", 10)
-    pdf.multi_cell(0, 6, text)
+    pdf.multi_cell(0, 6, _safe_text(text))
 
 
 def _kpi_row(pdf: FPDF, kpis: list[tuple[str, str]]):

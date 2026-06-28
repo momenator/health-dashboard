@@ -72,14 +72,61 @@ async def annual_report_endpoint(
     year: str | None = None,
     _: None = Depends(verify_api_key),
 ) -> dict:
-    """Generate an annual PDF report from all CSV data.
-
-    Returns the path to the generated PDF file.
-    """
+    """Generate an annual PDF report from all CSV data."""
     from app.tools.annual_report import generate_annual_report
-
     try:
         output_path = generate_annual_report(year=year)
         return {"status": "ok", "path": str(output_path)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/report/annual/download")
+async def annual_report_download_endpoint(
+    year: str | None = None,
+    _: None = Depends(verify_api_key),
+):
+    """Generate and download an annual PDF report."""
+    from fastapi.responses import FileResponse
+    from app.tools.annual_report import generate_annual_report
+    try:
+        output_path = generate_annual_report(year=year)
+        return FileResponse(path=str(output_path), media_type="application/pdf", filename=output_path.name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/report/generate")
+async def generate_structured_report(
+    request: dict,
+    _: None = Depends(verify_api_key),
+) -> dict:
+    """Generate a structured report for frontend rendering.
+
+    Request body:
+    {
+        "report_type": "internal" | "donor" | "portfolio_review",
+        "period": "annual_2026" | "h2_2026" | "q4_2026",
+        "scope": "portfolio" | "individual",
+        "project": null | "mchp_patient_support" | "ambulance_trips" | "tb_patient_journey" | "community_workers" | "sensitization_activities",
+        "include_data_quality": true,
+        "include_source_coverage": false
+    }
+
+    Returns structured JSON with KPIs, narratives, insights, and dashboard data
+    for the frontend to render as a professional report.
+    """
+    from app.tools.report_generator import generate_report
+
+    try:
+        result = generate_report(
+            report_type=request.get("report_type", "internal"),
+            period=request.get("period", "annual_2026"),
+            scope=request.get("scope", "portfolio"),
+            project=request.get("project"),
+            include_data_quality=request.get("include_data_quality", True),
+            include_source_coverage=request.get("include_source_coverage", False),
+        )
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

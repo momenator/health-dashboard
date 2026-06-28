@@ -3,13 +3,13 @@
 ROUTER_SYSTEM = """You are an intent router for an AI health program chatbot. Your job is to classify user questions into exactly one intent category.
 
 Available intents:
-- data_lookup: factual/counting/filtering questions (e.g., "How many TB screenings?", "give me number of ambulance calls")
+- data_lookup: factual/counting/filtering questions, analysis, insights, summaries, metrics, "explain the data", "what does this mean", "key findings", "analyze"
 - chart: graph/plot/visualize requests (e.g., "Show screenings by district as a bar chart")
-- explanation: questions about column meanings, methodology, confidence markers, indicators
+- explanation: ONLY for meta-questions about the system itself, like "what does confidence mean", "what columns exist", "explain methodology". NOT for data analysis.
 - recommendation: requests for operational improvement suggestions
 - report_text: requests to write polished annual-report paragraphs
 - prediction: risk scoring or forecasting requests (reserved for future)
-- clarification: ONLY when the question is completely unrelated to health data OR too vague to answer
+- clarification: ONLY when the question is completely unrelated to health data OR truly incomprehensible
 
 Available tables and their domains:
 - tb_patient_journey: TB screening, diagnosis, treatment, follow-up, outcomes (2025 data)
@@ -63,6 +63,17 @@ QUERY_PROMPT = """Generate an Athena SQL query for this question:
 "{message}"
 
 Entities extracted: {entities}
+
+IMPORTANT CONTEXT:
+- The current date is June 2026. "This year" means year = '2026'. "Last year" means year = '2025'.
+- ambulance_trips has 146 rows, all year='2026'. Use COUNT(*) for "how many trips/calls".
+- ambulance_causes has 248 rows, all year='2026'. Has a case_count column — use SUM(case_count) for totals.
+- tb_patient_journey has 4495 rows, year='2025'. 
+- community_workers has 221 rows, year='2026'.
+- sensitization_activities has 71 rows, year='2026'.
+- mchp_patient_support has 2151 rows, year='2025'.
+- Do NOT filter by year unless the data spans multiple years or the user asks for a specific year.
+- For summaries/analysis: use GROUP BY with the most relevant dimension (site, district, cause, outcome).
 """
 
 ANSWER_SYSTEM = """You are a health program data analyst. Summarize query results clearly and concisely.
@@ -88,14 +99,14 @@ Provide a clear answer based on these results."""
 CHART_SYSTEM = """You are a chart configuration assistant. Given query results, determine the best chart type and configure it.
 
 Respond ONLY with valid JSON:
-{"type": "bar|line|pie|table", "title": "...", "xKey": "column_name", "yKey": "column_name", "data": [...]}
+{"type": "bar|line|pie", "title": "...", "xKey": "column_name", "yKey": "column_name", "data": [...]}
 
 Rules:
-- Use "bar" for comparisons across categories.
-- Use "line" for time series.
+- Use "bar" for comparisons across categories or counts. This is the default.
+- Use "line" for time series data.
 - Use "pie" for proportions (max 8 slices).
-- Use "table" when there are too many categories or the data is better shown raw.
-- The "data" field should contain the actual data rows."""
+- NEVER use "table". Always pick bar, line, or pie.
+- The "data" field should contain the actual data rows as objects with the xKey and yKey fields."""
 
 CHART_PROMPT = """User question: "{message}"
 

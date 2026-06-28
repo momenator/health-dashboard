@@ -52,6 +52,11 @@ def _chart_via_bedrock(message: str, results: list[dict[str, Any]]) -> ChartPayl
             if json_str.startswith("json"):
                 json_str = json_str[4:]
         chart_data = json.loads(json_str)
+
+        # Never allow "table" type — force to "bar" if model suggests it
+        if chart_data.get("type") == "table":
+            chart_data["type"] = "bar"
+
         return ChartPayload(**chart_data)
     except (json.JSONDecodeError, ValueError) as e:
         logger.error(f"Failed to parse chart JSON from Bedrock: {e}")
@@ -75,13 +80,16 @@ def _chart_heuristic(message: str, results: list[dict[str, Any]]) -> ChartPayloa
     data_cols = [c for c in columns if c not in skip_cols]
 
     if len(data_cols) < 2:
-        return ChartPayload(
-            type="table",
-            title="Results",
-            xKey=None,
-            yKey=None,
-            data=results[:20],
-        )
+        # Only one column — show as bar chart with index
+        if data_cols:
+            return ChartPayload(
+                type="bar",
+                title="Results",
+                xKey="item",
+                yKey=data_cols[0],
+                data=[{"item": f"Row {i+1}", data_cols[0]: row.get(data_cols[0], "")} for i, row in enumerate(results[:20])],
+            )
+        return None
 
     # Detect numeric column for Y axis
     y_col = None
@@ -101,12 +109,21 @@ def _chart_heuristic(message: str, results: list[dict[str, Any]]) -> ChartPayloa
             break
 
     if not x_col or not y_col:
-        return ChartPayload(type="table", title="Results", xKey=None, yKey=None, data=results[:20])
+        # If we can't find good axes, use first two columns as bar
+        x_col = data_cols[0]
+        y_col = data_cols[1] if len(data_cols) > 1 else data_cols[0]
+        return ChartPayload(
+            type="bar",
+            title="Results",
+            xKey=x_col,
+            yKey=y_col,
+            data=[{x_col: row.get(x_col, ""), y_col: row.get(y_col, "")} for row in results[:20]],
+        )
 
     # Determine chart type
     chart_type = "bar"
     message_lower = message.lower()
-    if any(w in message_lower for w in ["trend", "time", "over time", "timeline", "evolution"]):
+    if any(w in message_lower for w in ["trend", "time", "over time", "timeline", "evolution", "monthly", "weekly"]):
         chart_type = "line"
     elif any(w in message_lower for w in ["proportion", "percentage", "share", "pie"]):
         if len(results) <= 8:
