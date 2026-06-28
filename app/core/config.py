@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     # API Key for incoming requests
     api_key: str | None = None
 
+    # Upload
+    upload_raw_dir: str = "/tmp/health-dashboard/uploads/raw"
+    upload_quarantine_dir: str = "/tmp/health-dashboard/uploads/quarantine"
+    pii_sanitizer_script: str | None = None
+
     # Legacy DB (kept for backward compat)
     database_url: str = "sqlite:///./health_dashboard.db"
 

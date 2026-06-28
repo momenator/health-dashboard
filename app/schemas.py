@@ -54,6 +54,20 @@ class ChatResponse(BaseModel):
     suggested_followups: list[str] | None = None
 
 
+class UploadSanitizationResponse(BaseModel):
+    table_name: str
+    original_filename: str
+    sanitized_filename: str
+    row_count: int
+    original_columns: list[str]
+    retained_columns: list[str]
+    removed_columns: list[str]
+    pseudonymized_columns: list[str]
+    redacted_cells: int
+    external_script_used: bool
+    message: str
+
+
 # ---------- Intent classification ----------
 
 Intent = Literal[

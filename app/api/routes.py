@@ -1,15 +1,19 @@
 """API routes for the health chatbot backend."""
 
 import logging
+import re
 import secrets
+import shutil
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 
 from app.core.config import get_settings
 from app.router import handle_chat
-from app.schemas import ChatRequest, ChatResponse
+from app.schemas import ChatRequest, ChatResponse, UploadSanitizationResponse
+from app.tools.pii import convert_xlsx_to_csv, sanitize_uploaded_csv
 from app.tools.schema import get_catalog_info, get_table_schemas
 
 logger = logging.getLogger(__name__)
@@ -165,3 +169,132 @@ async def location_news_endpoint(
             "cache_ttl_hours": 24,
             "items": [],
         }
+
+
+@router.post("/report/annual/download")
+async def annual_report_download_endpoint(
+    year: str | None = None,
+    _: None = Depends(verify_api_key),
+):
+    """Generate and download an annual PDF report."""
+    from fastapi.responses import FileResponse
+    from app.tools.annual_report import generate_annual_report
+    try:
+        output_path = generate_annual_report(year=year)
+        return FileResponse(path=str(output_path), media_type="application/pdf", filename=output_path.name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/report/generate")
+async def generate_structured_report(
+    request: dict,
+    _: None = Depends(verify_api_key),
+) -> dict:
+    """Generate a structured report for frontend rendering."""
+    from app.tools.report_generator import generate_report
+    try:
+        result = generate_report(
+            report_type=request.get("report_type", "internal"),
+            period=request.get("period", "annual_2026"),
+            scope=request.get("scope", "portfolio"),
+            project=request.get("project"),
+            include_data_quality=request.get("include_data_quality", True),
+            include_source_coverage=request.get("include_source_coverage", False),
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload-data", response_model=UploadSanitizationResponse)
+async def upload_data(
+    file: UploadFile = File(...),
+    _: None = Depends(verify_api_key),
+) -> UploadSanitizationResponse:
+    """Upload a CSV/XLSX and publish only a sanitized copy for downstream analysis.
+
+    The upload pipeline:
+    1. Accepts CSV or XLSX file
+    2. Stores raw file in a secure location (not accessible to queries)
+    3. Converts XLSX to CSV if needed
+    4. Runs PII sanitization (removes name/phone/CIN/photo columns, redacts PII patterns)
+    5. Writes sanitized CSV to the reporting data directory
+    6. Returns a report of what was removed/redacted
+
+    The chatbot and report tools can then query the sanitized dataset.
+    """
+    settings = get_settings()
+    filename = file.filename or "uploaded.csv"
+    suffix = Path(filename).suffix.lower()
+
+    if suffix not in {".csv", ".xlsx"}:
+        raise HTTPException(status_code=400, detail="Only CSV and XLSX uploads are supported.")
+
+    table_name = _table_name_from_filename(filename)
+    raw_dir = Path(settings.upload_raw_dir)
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    raw_path = raw_dir / f"{table_name}{suffix}"
+
+    try:
+        # Save raw upload
+        with raw_path.open("wb") as target:
+            shutil.copyfileobj(file.file, target)
+
+        sanitized_path = Path(settings.data_dir) / f"{table_name}.csv"
+        sanitizer_input_path = raw_path
+        converted_path: Path | None = None
+
+        # Convert XLSX to CSV if needed
+        if suffix == ".xlsx":
+            converted_path = raw_dir / f"{table_name}.converted.csv"
+            convert_xlsx_to_csv(raw_path, converted_path)
+            sanitizer_input_path = converted_path
+
+        # Run PII sanitization
+        report = sanitize_uploaded_csv(
+            sanitizer_input_path,
+            sanitized_path,
+            original_filename=filename,
+            script_path=settings.pii_sanitizer_script,
+        )
+
+        # Cleanup intermediate file
+        if converted_path and converted_path.exists():
+            converted_path.unlink()
+
+        # Clear schema cache so new table is discoverable
+        get_table_schemas.cache_clear()
+
+    except Exception as e:
+        # Quarantine the failed upload
+        quarantine_dir = Path(settings.upload_quarantine_dir)
+        quarantine_dir.mkdir(parents=True, exist_ok=True)
+        if raw_path.exists():
+            raw_path.replace(quarantine_dir / raw_path.name)
+        raise HTTPException(status_code=500, detail=f"Upload processing failed: {str(e)}")
+
+    return UploadSanitizationResponse(
+        table_name=table_name,
+        original_filename=report.original_filename,
+        sanitized_filename=report.sanitized_filename,
+        row_count=report.row_count,
+        original_columns=report.original_columns,
+        retained_columns=report.retained_columns,
+        removed_columns=report.removed_columns,
+        pseudonymized_columns=report.pseudonymized_columns,
+        redacted_cells=report.redacted_cells,
+        external_script_used=report.external_script_used,
+        message="Upload accepted. Only the sanitized dataset is available to downstream analysis.",
+    )
+
+
+def _table_name_from_filename(filename: str) -> str:
+    """Convert a filename to a safe table name."""
+    stem = Path(filename).stem.lower()
+    table_name = re.sub(r"[^a-z0-9_]+", "_", stem).strip("_")
+    if not table_name:
+        table_name = "uploaded_dataset"
+    if not table_name.startswith("uploaded_"):
+        table_name = f"uploaded_{table_name}"
+    return table_name[:80]
