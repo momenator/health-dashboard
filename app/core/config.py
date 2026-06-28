@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model_id: str = "gpt-4o-mini"
 
+    # Groq (for news summarization)
+    groq_api_key: str | None = None
+
     # Bedrock
     enable_bedrock: bool = False
     bedrock_model_id: str = Field(default="anthropic.claude-3-5-sonnet-20241022-v2:0")
@@ -45,7 +48,7 @@ class Settings(BaseSettings):
     data_dir: str = "data/reporting"
 
     # CORS
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://lovable.dev"
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://lovable.dev,https://*.lovable.app,https://*.lovableproject.com"
 
     # Lovable
     lovable_webhook_url: str | None = None

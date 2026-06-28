@@ -1,6 +1,8 @@
 """API routes for the health chatbot backend."""
 
+import logging
 import secrets
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -9,6 +11,8 @@ from app.core.config import get_settings
 from app.router import handle_chat
 from app.schemas import ChatRequest, ChatResponse
 from app.tools.schema import get_catalog_info, get_table_schemas
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -83,3 +87,85 @@ async def annual_report_endpoint(
         return {"status": "ok", "path": str(output_path)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/map-events")
+async def map_events_endpoint(year: str = "current") -> dict:
+    """Return GeoJSON FeatureCollection of map events.
+
+    Only includes records with verified coordinates.
+    Uses GPS from CSVs or locations_master.csv lookup.
+    Never invents coordinates.
+    """
+    from app.tools.map_events import generate_map_events
+
+    try:
+        return generate_map_events(year=year)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/map-events/refresh")
+async def map_events_refresh_endpoint(
+    year: str = "current",
+    _: None = Depends(verify_api_key),
+) -> dict:
+    """Re-read CSVs and rebuild map event data.
+
+    Returns fresh GeoJSON metadata and refresh status.
+    """
+    from app.tools.map_events import generate_map_events
+
+    try:
+        result = generate_map_events(year=year)
+        return {
+            "status": "refreshed",
+            "metadata": result["metadata"],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/location-news")
+async def location_news_endpoint(
+    lat: float | None = None,
+    lon: float | None = None,
+    location: str | None = None,
+    district: str | None = None,
+    region: str | None = None,
+    radius_km: int = 50,
+) -> dict:
+    """Get location-based news for a map marker.
+
+    Uses web search with fallback hierarchy and Groq for summarization.
+    Groq API key is server-side only, never exposed to frontend.
+    Results cached for 24 hours.
+    """
+    from app.tools.location_news import get_location_news
+
+    try:
+        return get_location_news(
+            lat=lat,
+            lon=lon,
+            location=location,
+            district=district,
+            region=region,
+            radius_km=radius_km,
+        )
+    except Exception as e:
+        logger.error(f"Location news failed: {e}")
+        # Return empty items, never 404
+        return {
+            "location_context": {
+                "location": location,
+                "district": district,
+                "region": region,
+                "lat": lat,
+                "lon": lon,
+                "radius_km": radius_km,
+                "search_level_used": None,
+            },
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "cache_ttl_hours": 24,
+            "items": [],
+        }
