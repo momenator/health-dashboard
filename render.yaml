@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: health-dashboard-api
+    runtime: python
+    buildCommand: pip install uv && uv sync
+    startCommand: uv run uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENABLE_BEDROCK
+        value: "true"
+      - key: AWS_REGION
+        value: us-west-2
+      - key: BEDROCK_MODEL_ID
+        value: us.mistral.pixtral-large-2502-v1:0
+      - key: APP_ENV
+        value: production
+      - key: DATA_DIR
+        value: data/reporting
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_SESSION_TOKEN
+        sync: false
+      - key: API_KEY
+        sync: false
