@@ -1,0 +1,297 @@
+{
+  "version": "2026-09-18.1",
+  "rules": [
+    {
+      "id": "age-range",
+      "label": "Age between 0 and 110",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "age",
+        "min": 0,
+        "max": 110
+      }
+    },
+    {
+      "id": "sex-values",
+      "label": "Sex is female or male",
+      "type": "allowed",
+      "enabled": true,
+      "params": {
+        "column": "sex",
+        "values": ["female", "male"]
+      }
+    },
+    {
+      "id": "patient-unique",
+      "label": "One row per patient",
+      "type": "unique",
+      "enabled": true,
+      "params": {
+        "column": "patient_key"
+      }
+    },
+    {
+      "id": "record-unique",
+      "label": "One row per record ID",
+      "type": "unique",
+      "enabled": true,
+      "params": {
+        "column": "record_id"
+      }
+    },
+    {
+      "id": "mchp-discharge-order",
+      "label": "Discharge is not before inclusion",
+      "type": "dateOrder",
+      "enabled": true,
+      "params": {
+        "earlier": "inclusion_date",
+        "later": "discharge_date"
+      }
+    },
+    {
+      "id": "mchp-amounts",
+      "label": "Patient + DfM amount = invoice",
+      "type": "sum",
+      "enabled": true,
+      "params": {
+        "parts": ["patient_amount", "dfm_amount"],
+        "total": "invoice_amount",
+        "tolerance": 1
+      }
+    },
+    {
+      "id": "mchp-shares",
+      "label": "Payment shares add up to 100%",
+      "type": "sum",
+      "enabled": true,
+      "params": {
+        "parts": ["patient_payment_percentage", "dfm_payment_percentage"],
+        "total": "100",
+        "tolerance": 0.5
+      }
+    },
+    {
+      "id": "household-size",
+      "label": "Household size 1–30",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "household_size",
+        "min": 1,
+        "max": 30
+      }
+    },
+    {
+      "id": "mchp-consent",
+      "label": "Consent is yes or no",
+      "type": "allowed",
+      "enabled": true,
+      "params": {
+        "column": "consent",
+        "values": ["yes", "no"]
+      }
+    },
+    {
+      "id": "mchp-surgery",
+      "label": "Surgical treatment names the intervention",
+      "type": "requiredIf",
+      "enabled": true,
+      "params": {
+        "when": "treatment_type",
+        "equals": ["chirurgical"],
+        "then": "surgical_intervention",
+        "expect": "filled"
+      }
+    },
+    {
+      "id": "mchp-required",
+      "label": "Key intake fields are filled",
+      "type": "required",
+      "enabled": true,
+      "params": {
+        "columns": ["inclusion_date", "site", "sex", "age", "support_category"]
+      }
+    },
+    {
+      "id": "tb-result-order",
+      "label": "Result is not before screening",
+      "type": "dateOrder",
+      "enabled": true,
+      "params": {
+        "earlier": "screening_date",
+        "later": "result_date"
+      }
+    },
+    {
+      "id": "tb-start-order",
+      "label": "Treatment start is not before screening",
+      "type": "dateOrder",
+      "enabled": true,
+      "params": {
+        "earlier": "screening_date",
+        "later": "treatment_start_date"
+      }
+    },
+    {
+      "id": "tb-final-order",
+      "label": "Treatment end is not before its start",
+      "type": "dateOrder",
+      "enabled": true,
+      "params": {
+        "earlier": "treatment_start_date",
+        "later": "final_treatment_date"
+      }
+    },
+    {
+      "id": "tb-positive-treated",
+      "label": "Positive TB result has a treatment start",
+      "type": "requiredIf",
+      "enabled": true,
+      "params": {
+        "when": "screening_result",
+        "equals": ["tpb_positive"],
+        "then": "treatment_start_date",
+        "expect": "filled"
+      }
+    },
+    {
+      "id": "tb-weight",
+      "label": "Weight 1–200 kg",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "weight_kg_screening",
+        "min": 1,
+        "max": 200
+      }
+    },
+    {
+      "id": "tb-height",
+      "label": "Height 0.3–2.3 m",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "height_m",
+        "min": 0.3,
+        "max": 2.3
+      }
+    },
+    {
+      "id": "tb-bmi",
+      "label": "BMI 10–60",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "bmi",
+        "min": 10,
+        "max": 60
+      }
+    },
+    {
+      "id": "tb-result-values",
+      "label": "Screening result uses known codes",
+      "type": "allowed",
+      "enabled": true,
+      "params": {
+        "column": "screening_result",
+        "values": ["negative", "tpb_positive", "tpb_negative", "tep"]
+      }
+    },
+    {
+      "id": "tb-required",
+      "label": "Key screening fields are filled",
+      "type": "required",
+      "enabled": true,
+      "params": {
+        "columns": ["screening_date", "sex", "age", "screening_result"]
+      }
+    },
+    {
+      "id": "sens-sex-sum",
+      "label": "Men + women = total participants",
+      "type": "sum",
+      "enabled": true,
+      "params": {
+        "parts": ["men_count", "women_count"],
+        "total": "total_participants",
+        "tolerance": 0
+      }
+    },
+    {
+      "id": "sens-age-sum",
+      "label": "Age groups add up to total participants",
+      "type": "sum",
+      "enabled": true,
+      "params": {
+        "parts": ["children_under_5", "children_5_to_18", "adults_over_18"],
+        "total": "total_participants",
+        "tolerance": 0
+      }
+    },
+    {
+      "id": "sens-time-order",
+      "label": "Activity ends after it starts",
+      "type": "dateOrder",
+      "enabled": true,
+      "params": {
+        "earlier": "start_time",
+        "later": "end_time"
+      }
+    },
+    {
+      "id": "amb-durations",
+      "label": "Trip legs add up to total trip time",
+      "type": "sum",
+      "enabled": true,
+      "params": {
+        "parts": ["call_to_departure_hours", "departure_to_arrival_hours"],
+        "total": "call_to_arrival_hours",
+        "tolerance": 0.02
+      }
+    },
+    {
+      "id": "amb-distance",
+      "label": "Distance 0–500 km",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "distance_km",
+        "min": 0,
+        "max": 500
+      }
+    },
+    {
+      "id": "amb-case-count",
+      "label": "Case count is at least 1",
+      "type": "range",
+      "enabled": true,
+      "params": {
+        "column": "case_count",
+        "min": 1,
+        "max": null
+      }
+    },
+    {
+      "id": "cw-start-order",
+      "label": "Start date is not after record date",
+      "type": "dateOrder",
+      "enabled": true,
+      "params": {
+        "earlier": "start_date",
+        "later": "record_date"
+      }
+    }
+  ],
+  "builtin": {
+    "identical": true,
+    "textInNumbers": true,
+    "future": true,
+    "outliers": true,
+    "k": 3,
+    "minN": 30,
+    "spelling": true,
+    "ignoredColumns": []
+  }
+}

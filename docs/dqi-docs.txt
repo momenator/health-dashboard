@@ -1,0 +1,240 @@
+Data Quality Index (DQI)
+
+1. Purpose
+The Data Quality Index (DQI) is a composite indicator that measures the quality of survey data on a
+scale from 0% to 100%. It is currently applied to the 2026 Baseline Survey and supports routine
+monitoring of data collection quality and OKR reporting across all countries in the program.
+The DQI is designed to be reusable and will be extended to other Elucid survey programs (including
+baseline and endline surveys) as data collection scales.
+
+2. Theoretical Framework
+[1] USAID (2023). Data Quality Assessment Tool (DQA) Completeness, Consistency, Integrity
+[2] WHO (2017). Data Quality Review (DQR), Module 1 Completeness, Consistency, Plausibility
+[3] ISO 25012:2008. Data Quality Model 15 quality characteristics incl. Completeness,
+Consistency
+[4] DAMA International (2017). DAMA-DMBOK, 2nd Ed. 6 core data quality dimensions
+[5] MEASURE Evaluation (2017). RDQA Tool Error-rate scoring approach
+[6] Tukey, J.W. (1977). Exploratory Data Analysis IQR fence method for outlier detection
+[7] Groves, R.M. et al. (2009). Survey Methodology, 2nd Ed.Skip logic / routing error methodology
+
+3. Dimensions
+3.1 · Completeness
+&quot;The extent to which all expected data elements are included in the dataset.&quot;
+● Measured as: % of respondents with no missing values in critical fields
+● Critical fields are defined per project in the DQI config (required questions with no skip logic)
+● Weight: 0% — reported only; excluded from DQI score because the digital form enforces
+required fields at collection
+
+3.2 · Uniqueness
+&quot;No entity instance is recorded more than once in the dataset.&quot;
+
+● Measured as: % of records that are NOT duplicates, based on the unique respondent ID
+column defined in the config
+● Weight: 25%
+Examples:
+Uganda (iCare): duplicate check on meta__surveyee_id
+Côte d&#39;Ivoire (Tony): duplicate check on meta__surveyee_id
+
+3.3 · Internal Consistency
+&quot;The extent to which data values do not contradict other values within the same record.&quot;
+● Measured as: % of respondents passing all cross-field logic checks defined in the config
+● Weight: 25%
+Examples:
+Uganda (iCare): malaria cases under 5 ≤ children under 5 · coffee land ≤ total land · illness treated ≤
+illness count
+Côte d&#39;Ivoire (Tony): cocoa land ≤ total land · cocoa bags delivered ≤ cocoa bags produced
+
+3.4 · Validity
+&quot;Data conforms to the syntax and acceptable range defined by the data collection instrument.&quot;
+● Scored at the respondent level: a respondent fails if ANY value violates a validity rule
+● Two check types:
+○ Numeric: value outside [min, max] bounds based on domain knowledge
+○ Categorical: value not in the allowed set defined by the ODK form
+● The Issue Tracker reports each failing field separately — one respondent may appear
+multiple times
+● Weight: 25%
+Numeric examples:
+Uganda (iCare): age at death 0–110 · injury days 0–364 · household size ≥ 1
+Côte d&#39;Ivoire (Tony): all production/land values ≥ 0
+
+Categorical examples:
+Uganda (iCare): land title ∈ {Yes, No, Don&#39;t know, Refused to answer}
+Côte d&#39;Ivoire (Tony): toilet type ∈ {w_c_inside, w_c_outside, latrines_in_yard, …} (ODK raw codes)
+
+3.5 · Conformity (Skip Logic)
+&quot;Data follows the expected collection protocol and routing instructions.&quot;
+
+● Measured as: % of respondents where all skip-pattern checks are correctly followed
+● Rules follow the pattern: if filter_column = filter_value → check_column should be filled / empty
+● Weight: 0% — reported only; excluded from DQI score because the digital form enforces
+routing automatically
+Examples:
+Uganda (iCare): if knows coffee production = Yes → production value must be filled · if birth = Yes →
+ANC question must be filled
+Côte d&#39;Ivoire (Tony): if knows cocoa production = Yes → bags value must be filled · if financial barrier
+= Yes → barrier details must be filled
+
+3.6 · Plausibility (Outliers)
+&quot;Data values are believable and within a reasonable range given the context.&quot;
+● Measured as: % of respondents with no statistical outliers in numeric fields defined in the
+config
+● Method: Tukey (1977) Lower = max(Q1 − 3×IQR, 0) · Upper = Q3 + 3×IQR
+● Lower bound floored at 0 for count/cost variables where negatives are impossible
+● Weight: 25%
+Examples:
+Uganda (iCare): household size, malaria cases, OOP health costs, coffee production, land size
+Côte d&#39;Ivoire (Tony): cocoa land size, cocoa bags produced, bags delivered to cooperative
+
+4. Scoring Method
+Each dimension is scored at the respondent level using a prevalence-based error-rate approach,
+consistent with MEASURE Evaluation&#39;s RDQA methodology [5]:
+Score = (1 − respondents with ≥1 violation / total respondents) × 100%
+A respondent &quot;fails&quot; a dimension if any check within that dimension is violated — regardless of how
+many individual violations they have.
+Score vs. Issue Tracker
+
+DQI Score Issue Tracker
+
+Purpose Monitoring &amp; OKR reporting Field staff follow-up
+
+Granularity Per respondent Per violation
+
+One respondent Counts once per dimension Can appear multiple times
+
+The Excel export re-aggregates issues to respondent level (Sheet 2) and interviewer level (Sheet 3) to
+support targeted corrective action.
+
+4.1 · Prevalence vs. Intensity
+The DQI score is a prevalence measure: it captures the share of respondents with at least
+one problem. This is intentional — the score is designed for OKR reporting, where a single
+clean threshold (e.g., ≥90%) is needed.
+To complement this, an intensity score is assigned to each respondent for dimensions
+where it is meaningful (Consistency, Validity, Plausibility). Intensity is defined at the
+respondent level as the raw count of checks that fail within a given dimension. A respondent
+with an intensity of 5 in Consistency has violated 5 cross-field logic rules, indicating a pattern
+of problems rather than an isolated error.
+
+Prevalence (DQI Score) Intensity
+
+Question How many respondents have a
+
+problem?
+
+How many checks does an affected
+respondent fail?
+
+Unit % of respondents with ≥1 violation Number of violations per respondent
+
+(integer)
+
+Use OKR monitoring &amp; trend tracking Identifying systematic vs. isolated
+errors; prioritising follow-up
+
+Reported
+
+Score table &amp; history Issue Tracker (per respondent);
+summary statistics in print report
+
+Intensity is not included in the DQI score and does not affect weighting. It is a diagnostic
+supplement, not a scoring component. In the print report and Excel export, the mean intensity
+across all affected respondents is shown as a summary statistic alongside prevalence.
+
+Intensity is reported for Consistency, Validity, and Plausibility only. It is not reported for
+Uniqueness (one duplicate = one violation by definition, no meaningful variance).
+
+5. Weighting
+The default implementation uses equal weighting across 4 scored dimensions. Completeness and
+Conformity are excluded from the DQI score but still calculated and reported. Weights can be
+adjusted per project in the DQI config.
+Dimension Default Weight Status
+Uniqueness 25% ✅ Scored
+Consistency 25% ✅ Scored
+Validity 25% ✅ Scored
+Plausibility 25% ✅ Scored
+Completeness 0% �� Reported only
+Conformity 0% �� Reported only
+Total 100%
+Rationale for exclusions: Completeness and Conformity are excluded because the digital ODK form
+enforces required fields and routing automatically. Issues in these dimensions indicate a form design
+problem, not a data collection quality problem. Both are still reported for transparency.
+
+6. Aggregation
+DQI = Σ (Score_i × Weight_i) / Σ Weight_i
+With equal weights across 4 dimensions, this simplifies to the arithmetic mean of the 4 scored
+dimension scores.
+
+7. Validity Ranges
+
+Numeric validity ranges are defined per project in the DQI config, based on domain knowledge and
+the survey instrument. Two approaches are used:
+● Absolute limits: for variables with known physical or logical boundaries (e.g., age, days,
+counts)
+● Non-negative floor only: for variables where only a minimum of 0 applies and no reliable
+upper bound exists (e.g., production volumes, land sizes)
+No data-driven bounds (e.g., P99 × 1.5) are used. Categorical validity is checked against the exact
+response options defined in the ODK form — using raw ODK codes where applicable.
+Variable type Example (Uganda) Example (Côte d&#39;Ivoire)
+Age Age at death: 0–110 —
+Duration Injury days: 0–364 —
+Count (household) Household size: ≥ 1 Household size: ≥ 1
+Production / land Coffee land: ≥ 0 Cocoa bags: ≥ 0 · Land size: ≥ 0
+
+8. Grading Scale
+Grade DQI Range Interpretation
+
+� Excellent 90 – 100% Data ready for analysis. No major corrective action needed.
+� Good 80 – 89% Data usable. Targeted corrections recommended.
+� Acceptable 70 – 79% Notable quality gaps. Interpret findings with caution. Corrective action
+
+required before final analysis.
+
+� Poor 60 – 69% Significant problems. Process review and possible re-training needed.
+⛔ Critical 0 – 59% Data unreliable. Consider re-collection or fundamental revision of data
+
+collection process.
+
+Thresholds are adapted from MEASURE Evaluation RDQA benchmarks and common M&amp;E practice.
+WHO DQR (2017) and USAID DQA (2023) both recommend organization-defined thresholds.
+
+9. Applying the DQI to a New Project
+To apply the DQI to a new survey program, create a project-specific config with the following sections:
+Config section What to define
+id_column The unique respondent identifier column
+critical_columns Required fields that everyone must answer (no skip logic)
+consistency_rules Cross-field logic checks (column_a ≤ column_b etc.)
+validity_rules Numeric ranges and categorical allowed values per column
+skip_logic_rules Expected routing: if gate = value → follow-up must be filled/empty
+outlier_columns Numeric columns to check for statistical outliers
+Run the DataQualityIndex class with the project config and desired weights. Export results to Excel
+using the standard export block.
+
+10. Limitations
+● Internal quality only — cannot detect systematic bias (e.g., interviewers consistently
+recording wrong values)
+● Skewed distributions — Tukey 3×IQR may generate false positives for highly skewed
+variables (e.g., costs, production volumes)
+● Config-dependent — quality of results depends on how well the config reflects the survey
+instrument; configs should be reviewed when the form changes
+● Equal weighting — a methodological choice, not an empirical finding; adjust per project as
+needed
+● Completeness scope — only critical fields are checked; skip-logic fields are intentionally
+excluded
+● Small samples — plausibility bounds (IQR-based) may be unstable with fewer than 30
+observations per variable
+
+11. Process
+The DQI is run weekly throughout the data collection period. Results are reported in the One
+Elucid Tracker at country level.
+
+Country teams are expected to review flagged issues and correct data within one week of the
+DQI report being shared. Corrections are applied directly in the data collection platform and
+reflected in the following week&#39;s DQI run.
+
+Step Who When
+Run DQI &amp; export results Data team Weekly
+
+Update One Elucid Tracker Data team Weekly
+
+Review flagged issues Country team Within 1 week
+
+Correct data in platform Country team Within 1 week
