@@ -3,6 +3,7 @@ import { rowLabel } from "@/lib/dqi/detect";
 import { INTENSITY_DIMENSIONS } from "@/lib/dqi/score";
 import { isEmpty } from "@/lib/dqi/values";
 import { cn } from "@/lib/utils";
+import { translate, type MessageKey } from "@/lib/i18n";
 import { cellMessages } from "@/lib/view";
 import { useApp, useDisplayMeta } from "@/store/app";
 import { Dot } from "./Tag";
@@ -12,6 +13,8 @@ export function RecordDrawer() {
   const result = useApp((s) => s.result);
   const openRow = useApp((s) => s.openRow);
   const meta = useDisplayMeta();
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const { setOpenRow, setTab, select } = useApp.getState();
 
   const open = openRow !== null && !!dataset && !!result && !!meta;
@@ -26,7 +29,7 @@ export function RecordDrawer() {
           <>
             <div className="border-b px-5 py-4 pr-12">
               <SheetTitle className="text-base">
-                Row {rowLabel(dataset, meta, openRow)}
+                {t("rowLabel")} {rowLabel(dataset, meta, openRow)}
                 {meta.idColumn && (
                   <>
                     {" · "}
@@ -37,17 +40,17 @@ export function RecordDrawer() {
               <SheetDescription>
                 {meta.personColumn && (
                   <>
-                    Entered by <b className="text-foreground">{row[meta.personColumn] || "—"}</b>{" "}
-                    ·{" "}
+                    {t("enteredBy")}{" "}
+                    <b className="text-foreground">{row[meta.personColumn] || "—"}</b> ·{" "}
                   </>
                 )}
-                {issues.length} issue{issues.length === 1 ? "" : "s"} in this record
+                {issues.length} {issues.length === 1 ? t("issue") : t("issues")} in this record
               </SheetDescription>
             </div>
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-5 py-4">
               <section>
                 <h3 className="mb-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Issues per dimension
+                  {t("issuesPerDimension")}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {INTENSITY_DIMENSIONS.map((d) => (
@@ -59,15 +62,12 @@ export function RecordDrawer() {
                     </div>
                   ))}
                 </div>
-                <p className="mt-2 text-[12.5px] text-muted-foreground">
-                  One issue is usually a typo. Several in the same record point to a pattern worth
-                  following up with the person who entered it.
-                </p>
+                <p className="mt-2 text-[12.5px] text-muted-foreground">{t("issueTip")}</p>
               </section>
 
               <section>
                 <h3 className="mb-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  Issues
+                  {t("issues")}
                 </h3>
                 <div className="flex flex-col gap-1.5">
                   {issues.map(({ check, violation }, i) => (
@@ -88,13 +88,13 @@ export function RecordDrawer() {
                       </span>
                     </button>
                   ))}
-                  {!issues.length && <p className="text-muted-foreground">No issues.</p>}
+                  {!issues.length && <p className="text-muted-foreground">{t("noIssues")}</p>}
                 </div>
               </section>
 
               <section>
                 <h3 className="mb-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                  All fields
+                  {t("allFields")}
                 </h3>
                 <dl className="grid grid-cols-[minmax(120px,38%)_1fr] overflow-hidden rounded-lg border text-[12.5px]">
                   {dataset.columns.map((c) => {
@@ -111,7 +111,9 @@ export function RecordDrawer() {
                           )}
                         >
                           {isEmpty(row[c]) ? (
-                            <span className="font-sans text-muted-foreground italic">empty</span>
+                            <span className="font-sans text-muted-foreground italic">
+                              {t("empty")}
+                            </span>
                           ) : (
                             row[c]
                           )}

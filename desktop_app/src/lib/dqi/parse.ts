@@ -1,8 +1,10 @@
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import type { Dataset, Row } from "./types";
 import { DATE_RE, isEmpty } from "./values";
 
 export class CsvError extends Error {}
+export class ExcelError extends Error {}
 
 /** Parse CSV text (comma, semicolon or tab separated; delimiter is auto-detected). */
 export function parseCsv(text: string, name: string): Dataset {
@@ -21,6 +23,43 @@ export function parseCsv(text: string, name: string): Dataset {
   });
   if (!rows.length) throw new CsvError("The file has a header row but no data rows.");
   return { name, columns, rows };
+}
+
+/** Parse the first worksheet of an .xls or .xlsx workbook. */
+export function parseExcel(data: ArrayBuffer, name: string): Dataset {
+  try {
+    const workbook = XLSX.read(data, { type: "array", cellDates: false });
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) throw new ExcelError("The workbook has no worksheets.");
+
+    const sheet = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+      header: 1,
+      defval: "",
+      raw: false,
+      blankrows: false,
+    });
+    const header = rows[0];
+    if (!header?.length) throw new ExcelError("The first worksheet has no header row.");
+
+    const columns = header.map((value, index) => String(value).trim() || `column_${index + 1}`);
+    const dataRows = rows.slice(1).filter((row) => row.some((value) => String(value).trim()));
+    if (!dataRows.length)
+      throw new ExcelError("The first worksheet has a header row but no data rows.");
+
+    return {
+      name,
+      columns,
+      rows: dataRows.map((values) => {
+        const row: Row = {};
+        for (const [index, column] of columns.entries()) row[column] = String(values[index] ?? "");
+        return row;
+      }),
+    };
+  } catch (error) {
+    if (error instanceof ExcelError) throw error;
+    throw new ExcelError("The workbook couldn't be read.");
+  }
 }
 
 export interface ColumnProfile {

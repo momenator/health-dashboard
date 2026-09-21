@@ -5,6 +5,8 @@ import { OP_WORD, TYPE_DIMENSION, TYPE_LABEL } from "@/lib/dqi/rules";
 import { compareOps, ruleSchema } from "@/lib/dqi/schema";
 import type { Dataset, Rule, RuleType } from "@/lib/dqi/types";
 import { isEmpty } from "@/lib/dqi/values";
+import { translate, type MessageKey } from "@/lib/i18n";
+import { useApp } from "@/store/app";
 
 type Draft = {
   id: string;
@@ -51,6 +53,8 @@ interface Props {
 }
 
 export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, onDelete }: Props) {
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const [draft, setDraft] = useState<Draft>(() => structuredClone(rule) as Draft);
   const [errors, setErrors] = useState<string[]>([]);
   const cols = dataset?.columns ?? [];
@@ -69,7 +73,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
           value={value}
           onChange={(e) => set({ [key]: e.target.value })}
         >
-          <option value="">Choose a column…</option>
+          <option value="">{t("chooseColumn")}</option>
           {options.map((c) => (
             <option key={c} value={c}>
               {c}
@@ -108,7 +112,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
             value=""
             onChange={(e) => e.target.value && set({ [key]: [...value, e.target.value] })}
           >
-            <option value="">Add a column…</option>
+            <option value="">{t("addColumn")}</option>
             {cols
               .filter((c) => !value.includes(c))
               .map((c) => (
@@ -147,7 +151,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
               set({ [key]: values.slice(0, 300) });
             }}
           >
-            Fill from this file
+            {t("fillFromFile")}
           </Button>
         </span>
       )}
@@ -171,22 +175,22 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
   const fields: Record<RuleType, () => React.ReactNode> = {
     range: () => (
       <>
-        {columnSelect("column", "Column")}
-        {numberInput("min", "Minimum", "none")}
-        {numberInput("max", "Maximum", "none")}
+        {columnSelect("column", t("column"))}
+        {numberInput("min", t("minimum"), "none")}
+        {numberInput("max", t("maximum"), "none")}
       </>
     ),
     allowed: () => (
       <>
-        {columnSelect("column", "Column")}
-        {lines("values", "Allowed values, one per line", "column")}
+        {columnSelect("column", t("column"))}
+        {lines("values", t("allowedValues"), "column")}
       </>
     ),
     compare: () => (
       <>
-        {columnSelect("a", "Column A")}
+        {columnSelect("a", t("columnA"))}
         <label className={labelCls}>
-          Must be
+          {t("mustBe")}
           <select
             className={inputCls}
             value={String(p.op)}
@@ -199,20 +203,20 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
             ))}
           </select>
         </label>
-        {columnSelect("b", "Column B")}
+        {columnSelect("b", t("columnB"))}
       </>
     ),
     dateOrder: () => (
       <>
-        {columnSelect("earlier", "Earlier column")}
-        {columnSelect("later", "Later column")}
+        {columnSelect("earlier", t("earlierColumn"))}
+        {columnSelect("later", t("laterColumn"))}
       </>
     ),
     sum: () => (
       <>
-        {columnList("parts", "Columns to add")}
+        {columnList("parts", t("columnsToAdd"))}
         <label className={labelCls}>
-          Must equal (column or number)
+          {t("mustEqual")}
           <input
             className={`${inputCls} font-mono`}
             list="rule-form-columns"
@@ -225,29 +229,29 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
             ))}
           </datalist>
         </label>
-        {numberInput("tolerance", "Allowed difference")}
+        {numberInput("tolerance", t("allowedDifference"))}
       </>
     ),
     requiredIf: () => (
       <>
-        {columnSelect("when", "When column")}
-        {columnSelect("then", "Then column")}
+        {columnSelect("when", t("whenColumn"))}
+        {columnSelect("then", t("thenColumn"))}
         <label className={labelCls}>
-          Must be
+          {t("mustBe")}
           <select
             className={inputCls}
             value={String(p.expect)}
             onChange={(e) => set({ expect: e.target.value })}
           >
-            <option value="filled">filled</option>
-            <option value="empty">empty</option>
+            <option value="filled">{t("filled")}</option>
+            <option value="empty">{t("empty")}</option>
           </select>
         </label>
-        {lines("equals", "…has one of these values (one per line)", "when")}
+        {lines("equals", t("valuesOnePerLine"), "when")}
       </>
     ),
-    required: () => columnList("columns", "Columns that must be filled"),
-    unique: () => columnSelect("column", "Column"),
+    required: () => columnList("columns", t("requiredColumns")),
+    unique: () => columnSelect("column", t("column")),
   };
 
   const save = () => {
@@ -278,7 +282,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
       }}
     >
       <label className={`${labelCls} col-span-full`}>
-        Name
+        {t("name")}
         <input
           className={inputCls}
           value={draft.label}
@@ -288,7 +292,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
       {isNew && (
         <>
           <label className={labelCls}>
-            Rule type
+            {t("ruleType")}
             <select
               className={inputCls}
               value={draft.type}
@@ -305,7 +309,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
             </select>
           </label>
           <label className={labelCls}>
-            ID (used in rules.json)
+            {t("ruleId")}
             <input
               className={`${inputCls} font-mono`}
               value={draft.id}
@@ -324,10 +328,10 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
       )}
       <div className="col-span-full flex flex-wrap gap-2">
         <Button type="submit" size="sm">
-          Save and re-check
+          {t("saveRecheck")}
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t("cancel")}
         </Button>
         <Button
           type="button"
@@ -336,7 +340,7 @@ export function RuleForm({ rule, isNew, dataset, existingIds, onSave, onCancel, 
           className="ml-auto text-err"
           onClick={onDelete}
         >
-          Delete rule
+          {t("deleteRule")}
         </Button>
       </div>
     </form>

@@ -4,11 +4,18 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { describeRule, missingColumns, TYPE_DIMENSION, TYPE_LABEL } from "@/lib/dqi/rules";
+import { missingColumns, TYPE_DIMENSION } from "@/lib/dqi/rules";
 import { parseRuleSet } from "@/lib/dqi/schema";
 import type { BuiltinSettings, Rule } from "@/lib/dqi/types";
 import { editorMode } from "@/lib/editor";
 import { saveFile } from "@/lib/platform";
+import {
+  describeRuleTranslated,
+  ruleLabel,
+  ruleTypeLabel,
+  translate,
+  type MessageKey,
+} from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { shippedRuleSet } from "@/rules";
 import { useApp } from "@/store/app";
@@ -30,6 +37,8 @@ export function RulesDrawer() {
 }
 
 function RulesBody() {
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const focusRuleId = useApp((s) => s.focusRuleId);
   const ruleSet = useApp((s) => s.ruleSet);
   const dataset = useApp((s) => s.dataset);
@@ -127,9 +136,9 @@ function RulesBody() {
             />
           )}
           <div className="min-w-0 flex-1">
-            <div className="font-semibold">{rule.label}</div>
+            <div className="font-semibold">{ruleLabel(language, rule.label)}</div>
             <p className="text-[12.5px] text-muted-foreground">
-              <RichText value={describeRule(rule)} />
+              <RichText value={describeRuleTranslated(rule, language)} />
             </p>
           </div>
           {editorMode && (
@@ -138,24 +147,27 @@ function RulesBody() {
               size="sm"
               onClick={() => setEditing(isEditing ? null : rule.id)}
             >
-              {isEditing ? "Close" : "Edit"}
+              {isEditing ? t("close") : t("edit")}
             </Button>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-          <Tag>{TYPE_LABEL[rule.type]}</Tag>
+          <Tag>{ruleTypeLabel(language, rule.type)}</Tag>
           <Tag>{TYPE_DIMENSION[rule.type]}</Tag>
           {!rule.enabled ? (
-            <Tag>Turned off</Tag>
+            <Tag>{t("off")}</Tag>
           ) : check ? (
             check.rows.size ? (
-              <Tag tone="err">{check.rows.size.toLocaleString()} rows flagged</Tag>
+              <Tag tone="err">
+                {check.rows.size.toLocaleString()} {t("rowsFlagged")}
+              </Tag>
             ) : (
-              <Tag tone="ok">Passes</Tag>
+              <Tag tone="ok">{t("passed")}</Tag>
             )
           ) : missing.length ? (
             <span>
-              Needs column{missing.length > 1 ? "s" : ""}{" "}
+              {t("needsColumns")}
+              {missing.length > 1 ? "s" : ""}{" "}
               {missing.map((m) => (
                 <code key={m} className="mr-1 font-mono">
                   {m}
@@ -201,7 +213,7 @@ function RulesBody() {
         />
       ) : (
         <Tag tone={b[key] ? "ok" : "neutral"} className="mt-0.5">
-          {b[key] ? "On" : "Off"}
+          {b[key] ? t("on") : t("off")}
         </Tag>
       )}
       <div className="min-w-0 flex-1">
@@ -215,11 +227,11 @@ function RulesBody() {
   return (
     <>
       <div className="border-b px-5 py-4 pr-12">
-        <SheetTitle className="text-base">Rules · version {ruleSet.version}</SheetTitle>
+        <SheetTitle className="text-base">
+          {t("rules")} · version {ruleSet.version}
+        </SheetTitle>
         <SheetDescription>
-          {editorMode
-            ? "Editor mode. Changes re-check the open file straight away. Save rules.json and ship it in a release so every installation gets them."
-            : "Every installation runs these same rules. A rule runs whenever a file has the columns it needs. Ask the data team to change a rule."}
+          {editorMode ? t("editorDescription") : t("everyInstallation")}
         </SheetDescription>
         {editorMode && (
           <div className="mt-3 flex flex-wrap items-end gap-2">
@@ -232,7 +244,7 @@ function RulesBody() {
               />
             </label>
             <Button size="sm" onClick={saveRulesFile}>
-              <Save /> Save rules.json
+              <Save /> {t("saveRules")}
             </Button>
             <Button
               variant="outline"
@@ -246,7 +258,7 @@ function RulesBody() {
                 )
               }
             >
-              <Plus /> Add rule
+              <Plus /> {t("addRule")}
             </Button>
             <Button
               variant="ghost"
@@ -255,14 +267,14 @@ function RulesBody() {
               onClick={() => {
                 const before = ruleSet;
                 setRuleSet(shippedRuleSet);
-                toast("Rules reset to the shipped version", {
+                toast(t("resetShipped"), {
                   action: { label: "Undo", onClick: () => setRuleSet(before) },
                 });
               }}
             >
-              <RotateCcw /> Reset to shipped rules
+              <RotateCcw /> {t("resetShipped")}
             </Button>
-            {changed && <Tag tone="info">Unsaved changes</Tag>}
+            {changed && <Tag tone="info">{t("unsavedChanges")}</Tag>}
           </div>
         )}
       </div>
@@ -270,7 +282,7 @@ function RulesBody() {
       <div ref={body} className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-5 py-4">
         {newRule && (
           <div className="rounded-lg border border-primary px-3 py-2.5">
-            <div className="font-semibold">New rule</div>
+            <div className="font-semibold">{t("newRule")}</div>
             <RuleForm
               rule={newRule}
               isNew
@@ -284,26 +296,24 @@ function RulesBody() {
         )}
 
         <h3 className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-          {dataset ? `Apply to ${dataset.name} · ${applicable.length}` : "Rules"}
+          {dataset ? `${t("applyTo")} ${dataset.name} · ${applicable.length}` : t("rules")}
         </h3>
         {applicable.length ? (
           applicable.map(card)
         ) : (
-          <p className="text-muted-foreground">
-            No rule matches this file's columns. The built-in checks below still run.
-          </p>
+          <p className="text-muted-foreground">{t("noRuleMatches")}</p>
         )}
 
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase [&::-webkit-details-marker]:hidden">
             <ChevronRight className="h-3.5 w-3.5 transition-transform group-open:rotate-90" />
-            Waiting for other files · {waiting.length}
+            {t("waitingOtherFiles")} · {waiting.length}
           </summary>
           <div className="mt-3 flex flex-col gap-3">{waiting.map(card)}</div>
         </details>
 
         <h3 className="mt-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-          Built-in checks · run on every file
+          {t("builtInChecks")}
         </h3>
         <div
           data-rule="builtin"
@@ -312,26 +322,18 @@ function RulesBody() {
             focusRuleId === "builtin" && "border-primary ring-2 ring-primary-soft",
           )}
         >
-          {builtinRow(
-            "identical",
-            "Identical rows",
-            "Every field matches another row. Counts toward Uniqueness.",
-          )}
-          {builtinRow(
-            "textInNumbers",
-            "Text in number columns",
-            "Flags text such as “n/a” or “12kg” in a mostly numeric column.",
-          )}
-          {builtinRow("future", "Dates in the future", "Any date after today.")}
+          {builtinRow("identical", t("identicalRows"), t("identicalRowsDescription"))}
+          {builtinRow("textInNumbers", t("textInNumbers"), t("textInNumbersDescription"))}
+          {builtinRow("future", t("futureDates"), t("futureDatesDescription"))}
           {builtinRow(
             "outliers",
-            "Unusual values",
-            `Tukey fence per numeric column: ${b.k}× the spread of the middle half, only with at least ${b.minN} values. Counts toward Plausibility.`,
+            t("unusualValues"),
+            `${t("unusualValuesDescription")} ${b.k}×, ${b.minN} values.`,
             <>
               {editorMode && (
                 <div className="mt-2 flex flex-wrap gap-3 text-[12.5px]">
                   <label className="flex items-center gap-1.5">
-                    Spread multiplier
+                    {t("spreadMultiplier")}
                     <input
                       type="number"
                       step="0.5"
@@ -344,7 +346,7 @@ function RulesBody() {
                     />
                   </label>
                   <label className="flex items-center gap-1.5">
-                    Minimum values
+                    {t("minimumValues")}
                     <input
                       type="number"
                       step="1"
@@ -361,14 +363,14 @@ function RulesBody() {
               )}
               {b.ignoredColumns.length > 0 && (
                 <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted-foreground">
-                  Not checked:
+                  {t("notChecked")}:
                   {b.ignoredColumns.map((c) =>
                     editorMode ? (
                       <button
                         key={c}
                         type="button"
                         className="cursor-pointer rounded-md border px-1.5 font-mono hover:bg-muted"
-                        title="Check this column again"
+                        title={t("checkAgain")}
                         onClick={() =>
                           updateBuiltin({
                             ignoredColumns: b.ignoredColumns.filter((x) => x !== c),
@@ -387,17 +389,13 @@ function RulesBody() {
               )}
               {result && result.outlierSkipped.length > 0 && (
                 <p className="mt-1 text-[12.5px] text-muted-foreground">
-                  Skipped in this file:{" "}
+                  {t("skippedInFile")}:{" "}
                   {result.outlierSkipped.map((s) => `${s.column} (${s.reason})`).join(", ")}
                 </p>
               )}
             </>,
           )}
-          {builtinRow(
-            "spelling",
-            "Spelling variants",
-            "Values that differ only in capitals, accents or one or two letters. Not scored.",
-          )}
+          {builtinRow("spelling", t("spellingVariants"), t("spellingVariantsDescription"))}
         </div>
       </div>
     </>

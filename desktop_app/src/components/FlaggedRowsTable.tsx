@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { rowLabel } from "@/lib/dqi/detect";
 import type { ColumnMeta, Dataset } from "@/lib/dqi/types";
 import { isEmpty } from "@/lib/dqi/values";
+import { translate, type MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { cellMessages, type TableEntry } from "@/lib/view";
 import { useApp } from "@/store/app";
@@ -15,6 +16,8 @@ interface Props {
   columns: string[];
   /** Hide the check name in "Why" when the whole table is one check. */
   singleCheck: boolean;
+  /** Clean datasets show their rows without a findings column. */
+  showWhy?: boolean;
 }
 
 interface Tip {
@@ -24,16 +27,25 @@ interface Tip {
   messages: string[];
 }
 
-export function FlaggedRowsTable({ dataset, meta, entries, columns, singleCheck }: Props) {
+export function FlaggedRowsTable({
+  dataset,
+  meta,
+  entries,
+  columns,
+  singleCheck,
+  showWhy = true,
+}: Props) {
   const scroller = useRef<HTMLDivElement>(null);
   const setOpenRow = useApp((s) => s.setOpenRow);
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const [tip, setTip] = useState<Tip | null>(null);
 
   const fixed = [meta.idColumn, meta.personColumn].filter(
     (c): c is string => !!c && dataset.columns.includes(c),
   );
   const dataCols = [...fixed, ...columns];
-  const template = `72px ${dataCols.map(() => "minmax(110px, 180px)").join(" ")} minmax(300px, 1fr)`;
+  const template = `72px ${dataCols.map(() => "minmax(110px, 180px)").join(" ")}${showWhy ? " minmax(300px, 1fr)" : ""}`;
 
   const virtualizer = useVirtualizer({
     count: entries.length,
@@ -71,7 +83,7 @@ export function FlaggedRowsTable({ dataset, meta, entries, columns, singleCheck 
             style={{ gridTemplateColumns: template }}
           >
             <div role="columnheader" className="sticky left-0 z-10 bg-muted px-2.5 py-2 text-right">
-              Row
+              {t("rowLabel")}
             </div>
             {dataCols.map((c) => (
               <div
@@ -83,9 +95,11 @@ export function FlaggedRowsTable({ dataset, meta, entries, columns, singleCheck 
                 {c}
               </div>
             ))}
-            <div role="columnheader" className="px-2.5 py-2">
-              Why it was flagged
-            </div>
+            {showWhy && (
+              <div role="columnheader" className="px-2.5 py-2">
+                {t("whyFlagged")}
+              </div>
+            )}
           </div>
 
           <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
@@ -152,21 +166,23 @@ export function FlaggedRowsTable({ dataset, meta, entries, columns, singleCheck 
                       </div>
                     );
                   })}
-                  <div role="cell" className="space-y-0.5 px-2.5 py-2 text-[12.5px]">
-                    {entry.base ? (
-                      <span>First occurrence (kept)</span>
-                    ) : (
-                      entry.issues.map((i, k) => (
-                        <div key={k} className="flex items-baseline gap-1.5">
-                          <Dot tone={i.check.severity === "error" ? "err" : "rev"} />
-                          <span>
-                            {!singleCheck && <b className="font-semibold">{i.check.label}: </b>}
-                            {i.violation.message}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                  {showWhy && (
+                    <div role="cell" className="space-y-0.5 px-2.5 py-2 text-[12.5px]">
+                      {entry.base ? (
+                        <span>{t("firstOccurrence")}</span>
+                      ) : (
+                        entry.issues.map((i, k) => (
+                          <div key={k} className="flex items-baseline gap-1.5">
+                            <Dot tone={i.check.severity === "error" ? "err" : "rev"} />
+                            <span>
+                              {!singleCheck && <b className="font-semibold">{i.check.label}: </b>}
+                              {i.violation.message}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

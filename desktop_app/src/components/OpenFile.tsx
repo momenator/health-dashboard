@@ -2,6 +2,7 @@ import { FileSpreadsheet, FolderOpen } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { editorMode } from "@/lib/editor";
+import { translate, type MessageKey } from "@/lib/i18n";
 import { openCsvFile } from "@/lib/openFile";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
@@ -12,6 +13,8 @@ export function OpenFile() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const ruleSet = useApp((s) => s.ruleSet);
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
 
   const open = async (file: File | undefined) => {
     if (!file) return;
@@ -56,24 +59,21 @@ export function OpenFile() {
           </div>
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
-              {busy ? "Checking the file…" : "Check a CSV for data-quality problems"}
+              {busy ? t("checkingFile") : t("checkCsv")}
             </h1>
-            <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-              Drop a CSV export here. The app scores it with the Data Quality Index and shows which
-              values don't make sense. Nothing leaves this computer.
-            </p>
+            <p className="mx-auto mt-2 max-w-md text-muted-foreground">{t("dropFile")}</p>
           </div>
           <Button
             type="button"
             disabled={busy}
             onClick={(e) => (e.stopPropagation(), input.current?.click())}
           >
-            <FolderOpen /> Choose a CSV file
+            <FolderOpen /> {t("chooseFile")}
           </Button>
           <input
             ref={input}
             type="file"
-            accept=".csv,.txt,text/csv"
+            accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             hidden
             onChange={(e) => {
               void open(e.target.files?.[0]);

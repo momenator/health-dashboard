@@ -6,6 +6,7 @@ import { TYPE_LABEL } from "@/lib/dqi/rules";
 import { fmt } from "@/lib/dqi/values";
 import { editorMode } from "@/lib/editor";
 import { exportPersonList } from "@/lib/exportActions";
+import { ruleLabel, translate, type MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { buildDetailView } from "@/lib/view";
 import { useApp, useDisplayMeta } from "@/store/app";
@@ -22,23 +23,50 @@ export function DetailPanel() {
   const showAll = useApp((s) => s.showAllColumns);
   const { setVariant, setShowAllColumns, openRules, setRuleSet } = useApp.getState();
   const meta = useDisplayMeta()!;
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
+  const hasFindings = result.checks.some((c) => c.rows.size);
+  const cleanEntries = useMemo(
+    () => dataset.rows.map((_, row) => ({ type: "row" as const, row, issues: [], base: false })),
+    [dataset],
+  );
 
   const view = useMemo(
     () => (selection ? buildDetailView(dataset, result, meta, selection, variant) : null),
     [dataset, result, meta, selection, variant],
   );
 
-  if (!selection || !view)
+  if (!selection || !view) {
+    if (!hasFindings) {
+      const fixed = new Set([meta.idColumn, meta.personColumn, meta.rowNumberColumn]);
+      const columns = dataset.columns.filter((column) => !fixed.has(column));
+      return (
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border bg-card">
+          <div className="shrink-0 border-b p-10 text-center text-muted-foreground">
+            <div className="mb-1 text-base font-semibold text-foreground">{t("nothingToShow")}</div>
+            {t("everyCheckPassed")}
+          </div>
+          <FlaggedRowsTable
+            dataset={dataset}
+            meta={meta}
+            entries={cleanEntries}
+            columns={columns}
+            singleCheck={false}
+            showWhy={false}
+          />
+        </section>
+      );
+    }
+
     return (
       <section className="flex items-center justify-center rounded-xl border bg-card p-10 text-center text-muted-foreground">
         <div>
-          <div className="mb-1 text-base font-semibold text-foreground">Nothing to show</div>
-          {result.checks.some((c) => c.rows.size)
-            ? "Pick a rule, column or person on the left."
-            : "Every check that applies to this file passed. Open Rules to see which rules ran."}
+          <div className="mb-1 text-base font-semibold text-foreground">{t("nothingToShow")}</div>
+          {t("pickProblem")}
         </div>
       </section>
     );
+  }
 
   const { check } = view;
   const fixed = new Set([meta.idColumn, meta.personColumn, meta.rowNumberColumn]);
@@ -70,11 +98,11 @@ export function DetailPanel() {
   let actions: React.ReactNode = null;
 
   if (check) {
-    title = check.label;
+    title = ruleLabel(language, check.label);
     tags = (
       <>
         <Tag tone={check.severity === "error" ? "err" : "rev"}>
-          {check.severity === "error" ? "Needs fixing" : "Worth a look"}
+          {check.severity === "error" ? t("needsFixing") : t("worthLook")}
         </Tag>
         <Tag>
           {check.dimension}
@@ -89,7 +117,7 @@ export function DetailPanel() {
       actions = (
         <>
           <Button variant="outline" size="sm" onClick={() => openRules(ruleId)}>
-            <ListChecks /> {editorMode ? "Edit rule" : "View rule"}
+            <ListChecks /> {editorMode ? t("editRule") : t("viewRule")}
           </Button>
           {editorMode && (
             <Button variant="ghost" size="sm" onClick={() => turnOff(ruleId)}>
@@ -116,13 +144,12 @@ export function DetailPanel() {
   } else if (selection.kind === "column") {
     const s = result.columnStats.find((x) => x.column === selection.column)!;
     title = selection.column;
-    tags = <Tag>Column</Tag>;
+    tags = <Tag>{t("column")}</Tag>;
     description = `${s.flagged.toLocaleString()} rows flagged in this column by any check · ${s.missing.toLocaleString()} rows (${fmt((s.missing / result.rowCount) * 100)}%) are empty.`;
   } else {
     title = selection.kind === "person" ? selection.name : "";
-    tags = <Tag>Data entry by</Tag>;
-    description =
-      "Every flagged record entered by this person. Export the list to send it to them for correction.";
+    tags = <Tag>{t("dataEntryBy")}</Tag>;
+    description = t("everyFlagged");
     const name = title;
     actions = (
       <Button
@@ -243,7 +270,7 @@ export function DetailPanel() {
         />
       ) : (
         <div className="p-10 text-center text-muted-foreground">
-          <div className="mb-1 font-semibold text-foreground">Nothing flagged</div>
+          <div className="mb-1 font-semibold text-foreground">{t("nothingFlagged")}</div>
           This check passed for every row.
         </div>
       )}

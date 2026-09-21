@@ -1,22 +1,27 @@
 import { toast } from "sonner";
-import { CsvError, parseCsv } from "@/lib/dqi/parse";
+import { CsvError, ExcelError, parseCsv, parseExcel } from "@/lib/dqi/parse";
 import { useApp } from "@/store/app";
 
-/** Read, parse and check a CSV the user picked or dropped. */
+/** Read, parse and check a supported CSV or Excel file. */
 export async function openCsvFile(file: File): Promise<void> {
-  if (!/\.(csv|txt)$/i.test(file.name)) {
-    toast.error(`${file.name} isn't a CSV file`, {
-      description: "Save the sheet as CSV (comma or semicolon separated) and open it again.",
+  const extension = file.name.match(/\.([^.]+)$/)?.[1].toLowerCase();
+  if (!extension || !["csv", "xls", "xlsx"].includes(extension)) {
+    toast.error(`${file.name} isn't a supported data file`, {
+      description: "Choose a CSV, XLS, or XLSX file and open it again.",
     });
     return;
   }
   try {
-    const text = await file.text();
+    const dataset =
+      extension === "csv"
+        ? parseCsv(await file.text(), file.name)
+        : parseExcel(await file.arrayBuffer(), file.name);
     // Let the "Checking…" state paint before the synchronous check runs.
     await new Promise((r) => setTimeout(r, 0));
-    useApp.getState().openDataset(parseCsv(text, file.name));
+    useApp.getState().openDataset(dataset);
   } catch (e) {
-    const message = e instanceof CsvError ? e.message : "The file couldn't be read as CSV.";
+    const message =
+      e instanceof CsvError || e instanceof ExcelError ? e.message : "The file couldn't be read.";
     toast.error(`Couldn't open ${file.name}`, { description: message });
   }
 }

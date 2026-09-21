@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { summarizePeople } from "@/lib/dqi/people";
 import type { Check } from "@/lib/dqi/types";
 import { fmt } from "@/lib/dqi/values";
+import { translate, type MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
   defaultSelection,
@@ -19,6 +20,8 @@ import { Dot, Tag } from "./Tag";
 const pct = (a: number, b: number) => (b ? (a / b) * 100 : 0);
 
 export function ProblemNav() {
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const tab = useApp((s) => s.tab);
   const setTab = useApp((s) => s.setTab);
   const select = useApp((s) => s.select);
@@ -48,9 +51,9 @@ export function ProblemNav() {
       <Summary />
       <Tabs value={tab} onValueChange={changeTab} className="border-b p-1.5">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="rule">By rule</TabsTrigger>
-          <TabsTrigger value="column">By column</TabsTrigger>
-          <TabsTrigger value="person">By person</TabsTrigger>
+          <TabsTrigger value="rule">{t("byRule")}</TabsTrigger>
+          <TabsTrigger value="column">{t("byColumn")}</TabsTrigger>
+          <TabsTrigger value="person">{t("byPerson")}</TabsTrigger>
         </TabsList>
       </Tabs>
       <div className="min-h-0 flex-1 overflow-auto p-1.5">
@@ -143,6 +146,8 @@ function Collapsible({
 
 function RuleList() {
   const result = useApp((s) => s.result)!;
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const selection = useApp((s) => s.selection);
   const select = useApp((s) => s.select);
 
@@ -169,19 +174,23 @@ function RuleList() {
 
   return (
     <>
-      <SectionTitle dot="err">Needs fixing · {errors.length}</SectionTitle>
+      <SectionTitle dot="err">
+        {t("needsFixing")} · {errors.length}
+      </SectionTitle>
       {errors.length ? (
         errors.map(item)
       ) : (
-        <p className="px-2.5 py-1 text-sm text-muted-foreground">No rule violations.</p>
+        <p className="px-2.5 py-1 text-sm text-muted-foreground">{t("noRuleViolations")}</p>
       )}
-      <SectionTitle dot="rev">Worth a look · {reviews.length}</SectionTitle>
+      <SectionTitle dot="rev">
+        {t("worthLook")} · {reviews.length}
+      </SectionTitle>
       {reviews.length ? (
         reviews.map(item)
       ) : (
-        <p className="px-2.5 py-1 text-sm text-muted-foreground">Nothing unusual found.</p>
+        <p className="px-2.5 py-1 text-sm text-muted-foreground">{t("nothingUnusual")}</p>
       )}
-      <Collapsible dot="ok" title={`Passed · ${passed.length}`}>
+      <Collapsible dot="ok" title={`${t("passed")} · ${passed.length}`}>
         {passed.map(item)}
       </Collapsible>
       <Collapsible dot="na" title={`Doesn't apply to this file · ${result.notApplicable.length}`}>
@@ -204,6 +213,8 @@ function RuleList() {
 
 function ColumnList() {
   const result = useApp((s) => s.result)!;
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const selection = useApp((s) => s.selection);
   const select = useApp((s) => s.select);
   const stats = useMemo(
@@ -213,7 +224,7 @@ function ColumnList() {
   const max = Math.max(1, ...stats.map((s) => s.flagged));
   return (
     <>
-      <SectionTitle>Columns with the most flagged rows</SectionTitle>
+      <SectionTitle>{t("columnsFlagged")}</SectionTitle>
       {stats.map((s) => (
         <Item
           key={s.column}
@@ -230,8 +241,10 @@ function ColumnList() {
             />
           </span>
           <span className="col-span-2 text-xs text-muted-foreground">
-            {s.flagged ? `${fmt(pct(s.flagged, result.rowCount))}% of rows flagged` : "No flags"} ·{" "}
-            {fmt(pct(s.missing, result.rowCount))}% empty
+            {s.flagged
+              ? `${fmt(pct(s.flagged, result.rowCount))}% ${t("flaggedRows")}`
+              : t("noFlags")}{" "}
+            · {fmt(pct(s.missing, result.rowCount))}% empty
           </span>
         </Item>
       ))}
@@ -245,6 +258,8 @@ function PersonList() {
   const personColumn = useDisplayMeta()!.personColumn;
   const selection = useApp((s) => s.selection);
   const select = useApp((s) => s.select);
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
   const people = useMemo(
     () => (personColumn ? summarizePeople(dataset, result, personColumn) : []),
     [dataset, result, personColumn],
@@ -253,9 +268,8 @@ function PersonList() {
   if (!personColumn)
     return (
       <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-        <div className="mb-1 font-semibold text-foreground">No data-entry column found</div>
-        Choose the column that records who entered each row under <b>Details</b> → <b>Entered by</b>{" "}
-        at the top of this panel.
+        <div className="mb-1 font-semibold text-foreground">{t("noDataEntry")}</div>
+        {t("chooseEnteredBy")} at the top of this panel.
       </div>
     );
 

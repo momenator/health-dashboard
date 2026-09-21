@@ -2,6 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DIMENSIONS, INTENSITY_DIMENSIONS } from "@/lib/dqi/score";
 import { fmt } from "@/lib/dqi/values";
+import { translate, type MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { useApp, useDisplayMeta } from "@/store/app";
 
@@ -19,6 +20,8 @@ const NONE = "__none__";
 export function Summary() {
   const dataset = useApp((s) => s.dataset)!;
   const result = useApp((s) => s.result)!;
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
 
   return (
     <div className="flex flex-col gap-1 border-b px-3.5 py-3">
@@ -44,7 +47,7 @@ export function Summary() {
         )}
         <Popover>
           <PopoverTrigger className="ml-auto inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border px-2 text-xs font-medium hover:bg-muted">
-            Details <ChevronDown className="h-3.5 w-3.5" />
+            {t("details")} <ChevronDown className="h-3.5 w-3.5" />
           </PopoverTrigger>
           <PopoverContent align="start" side="bottom" className="w-[400px] p-0">
             <ScoreDetails />
@@ -52,8 +55,8 @@ export function Summary() {
         </Popover>
       </div>
       <div className="text-xs text-muted-foreground">
-        DQI · {result.rowCount.toLocaleString()} records · {result.rulesRun} rules ran ·{" "}
-        {result.notApplicable.length} don't apply
+        DQI · {result.rowCount.toLocaleString()} {t("records")} · {result.rulesRun} {t("rulesRan")}{" "}
+        · {result.notApplicable.length} {t("doNotApply")}
       </div>
     </div>
   );

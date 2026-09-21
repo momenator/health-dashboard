@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { editorMode } from "@/lib/editor";
 import { exportWorkbook } from "@/lib/exportActions";
+import { translate, type MessageKey } from "@/lib/i18n";
 import { openCsvFile } from "@/lib/openFile";
 import { displayMeta, useApp } from "@/store/app";
 import { Brand } from "./Brand";
@@ -17,6 +18,8 @@ export function Results() {
   const [exporting, setExporting] = useState(false);
   const openRules = useApp((s) => s.openRules);
   const version = useApp((s) => s.ruleSet.version);
+  const language = useApp((s) => s.language);
+  const t = (key: MessageKey) => translate(language, key);
 
   const onExport = async () => {
     const s = useApp.getState();
@@ -45,12 +48,12 @@ export function Results() {
           {editorMode && " · editor mode"}
         </span>
         <Button variant="outline" size="sm" onClick={() => input.current?.click()}>
-          <FolderOpen /> Open another file
+          <FolderOpen /> {t("openAnother")}
         </Button>
         <input
           ref={input}
           type="file"
-          accept=".csv,.txt,text/csv"
+          accept=".csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           hidden
           onChange={(e) => {
             const f = e.target.files?.[0];
@@ -59,10 +62,10 @@ export function Results() {
           }}
         />
         <Button variant="outline" size="sm" onClick={() => openRules()}>
-          <ListChecks /> Rules
+          <ListChecks /> {t("viewRules")}
         </Button>
         <Button size="sm" onClick={onExport} disabled={exporting}>
-          <FileDown /> {exporting ? "Saving…" : "Export to Excel"}
+          <FileDown /> {exporting ? t("saving") : t("exportExcel")}
         </Button>
       </header>
 

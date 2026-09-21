@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { runDqi } from "@/lib/dqi/engine";
 import type { ColumnMeta, Dataset, DqiResult, RuleSet } from "@/lib/dqi/types";
 import { shippedRuleSet } from "@/rules";
+import type { Language } from "@/lib/i18n";
 
 export type Tab = "rule" | "column" | "person";
 
@@ -12,6 +13,7 @@ export type Selection =
   | { kind: "person"; name: string };
 
 interface AppState {
+  language: Language;
   dataset: Dataset | null;
   ruleSet: RuleSet;
   result: DqiResult | null;
@@ -39,6 +41,7 @@ interface AppState {
   closeRules: () => void;
   setIdColumn: (c: string | null) => void;
   setPersonColumn: (c: string | null) => void;
+  toggleLanguage: () => void;
 }
 
 /** The ID / person columns after applying the user's overrides. */
@@ -71,6 +74,7 @@ function selectionStillValid(sel: Selection | null, result: DqiResult, ds: Datas
 }
 
 export const useApp = create<AppState>((set, get) => ({
+  language: (localStorage.getItem("dfm-language") as Language) === "fr" ? "fr" : "en",
   dataset: null,
   ruleSet: shippedRuleSet,
   result: null,
@@ -123,6 +127,12 @@ export const useApp = create<AppState>((set, get) => ({
   closeRules: () => set({ rulesOpen: false, focusRuleId: null }),
   setIdColumn: (c) => set({ idColumnOverride: c }),
   setPersonColumn: (c) => set({ personColumnOverride: c }),
+  toggleLanguage: () =>
+    set((state) => {
+      const language: Language = state.language === "en" ? "fr" : "en";
+      localStorage.setItem("dfm-language", language);
+      return { language };
+    }),
 }));
 
 /** displayMeta for components; selects primitives so the store subscription stays stable. */
