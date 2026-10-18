@@ -85,7 +85,7 @@ $msiDir  = Join-Path $ScriptDir "src-tauri\target\release\bundle\msi"
 if (Test-Path $nsisDir) {
     Write-Host "NSIS-Installer (.exe):" -ForegroundColor Cyan
     Get-ChildItem $nsisDir -Filter "*.exe" | ForEach-Object {
-        $sizeMB = [math]::Round($_.Length / 1MB, 1)
+        $sizeMB = [math]::Round($_.Length / 1048576, 1)
         Write-Host "  $($_.Name)  ($sizeMB MB)" -ForegroundColor White
         Write-Host "  Pfad: $($_.FullName)" -ForegroundColor DarkGray
     }
@@ -95,7 +95,7 @@ if (Test-Path $msiDir) {
     Write-Host ""
     Write-Host "MSI-Installer (.msi):" -ForegroundColor Cyan
     Get-ChildItem $msiDir -Filter "*.msi" | ForEach-Object {
-        $sizeMB = [math]::Round($_.Length / 1MB, 1)
+        $sizeMB = [math]::Round($_.Length / 1048576, 1)
         Write-Host "  $($_.Name)  ($sizeMB MB)" -ForegroundColor White
         Write-Host "  Pfad: $($_.FullName)" -ForegroundColor DarkGray
     }
